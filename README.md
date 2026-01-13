@@ -1,0 +1,2 @@
+# gakumasu_comulist
+学マスのコミュ一覧の未読管理を行うWebシステム
