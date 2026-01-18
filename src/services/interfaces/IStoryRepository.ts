@@ -1,7 +1,7 @@
 import type {
+  Story,
   ProduceCardStory,
   SupportCardStory,
-  StoriesData
 } from '../../types/domain'
 
 /**
@@ -25,16 +25,16 @@ export interface IStoryRepository {
 
   /**
    * すべてのストーリーを取得する
-   * @returns プロデュースカードストーリーとサポートカードストーリーの配列
+   * @returns 全種類のストーリーの配列
    */
-  getAllStories(): (ProduceCardStory | SupportCardStory)[]
+  getAllStories(): (Story)[]
 
   /**
    * ストーリーIDでストーリーを検索する
    * @param storyId ストーリーID
    * @returns 見つかったストーリー。見つからない場合はundefined
    */
-  findById(storyId: string): ProduceCardStory | SupportCardStory | undefined
+  findById(storyId: string): Story | undefined
 
   /**
    * プロデュースカードIDでストーリーを検索する
