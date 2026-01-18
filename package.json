@@ -1,0 +1,26 @@
+{
+  "name": "gakumasu_comulist",
+  "version": "1.0.0",
+  "description": "学マスのコミュ一覧の未読管理を行うWebシステム",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sisomoti/gakumasu_comulist.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {},
+  "devDependencies": {},
+  "bugs": {
+    "url": "https://github.com/sisomoti/gakumasu_comulist/issues"
+  },
+  "homepage": "https://github.com/sisomoti/gakumasu_comulist#readme"
+}
