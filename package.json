@@ -7,10 +7,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "vite --config vite.config.ts",
-    "build": "vue-tsc && vite build --config vite.config.ts",
-    "preview": "vite preview --config vite.config.ts",
-    "test": "vitest --config vitest.config.ts"
+    "dev": "vite --config config/vite.config.ts",
+    "build": "vue-tsc && vite build --config config/vite.config.ts",
+    "preview": "vite preview --config config/vite.config.ts",
+    "test": "vitest --config config/vitest.config.ts"
   },
   "repository": {
     "type": "git",
