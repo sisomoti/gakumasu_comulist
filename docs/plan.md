@@ -14,15 +14,32 @@
 │  ┌───────────────────────────────────┐  │
 │  │  Vue.js 3 + TypeScript + Vite     │  │
 │  │  ┌─────────────────────────────┐ │  │
-│  │  │ UI Layer (Components)        │ │  │
+│  │  │ Presentation Layer           │ │  │
+│  │  │ (Components)                 │ │  │
 │  │  └─────────────────────────────┘ │  │
 │  │  ┌─────────────────────────────┐ │  │
-│  │  │ Business Logic (Composables)│ │  │
-│  │  │ - SOLID原則適用              │ │  │
+│  │  │ Application Layer            │ │  │
+│  │  │ (Composables)                │ │  │
 │  │  └─────────────────────────────┘ │  │
 │  │  ┌─────────────────────────────┐ │  │
-│  │  │ Data Layer (Services)        │ │  │
-│  │  │ - インターフェース依存       │ │  │
+│  │  │ Domain Service Layer         │ │  │
+│  │  │ (Business Rules)             │ │  │
+│  │  └─────────────────────────────┘ │  │
+│  │  ┌─────────────────────────────┐ │  │
+│  │  │ Domain Model Layer           │ │  │
+│  │  │ (Entity Types)               │ │  │
+│  │  └─────────────────────────────┘ │  │
+│  │  ┌─────────────────────────────┐ │  │
+│  │  │ Data Acquisition Layer          │ │  │
+│  │  │ (IDataSource)                │ │  │
+│  │  └─────────────────────────────┘ │  │
+│  │  ┌─────────────────────────────┐ │  │
+│  │  │ Data Access Layer            │ │  │
+│  │  │ (Repository)                 │ │  │
+│  │  └─────────────────────────────┘ │  │
+│  │  ┌─────────────────────────────┐ │  │
+│  │  │ Infrastructure Layer         │ │  │
+│  │  │ (Storage)                    │ │  │
 │  │  └─────────────────────────────┘ │  │
 │  └───────────────────────────────────┘  │
 │         ↑ JSONファイル読み込み           │
@@ -42,6 +59,8 @@
 │  └───────────────────────────────────┘  │
 └─────────────────────────────────────────┘
 ```
+
+詳細なレイヤー構成については、`docs/data-model.md`の「アーキテクチャレイヤーの詳細説明」セクションを参照してください。
 
 ## 技術スタック
 
@@ -64,46 +83,69 @@
 - **データ保存**: ローカルストレージ
 - **パッケージ管理**: npm
 
-## データ構造（拡張版）
+## データ構造
 
 ### stories.json (GitHub Actionsで生成)
+
+新設計に基づくデータ構造。詳細は`docs/data-model.md`を参照してください。
+
 ```typescript
-interface StorySource {
-  type: 'card' | 'event' | 'main' | 'custom'
-  // カードに紐づく場合
-  cardId?: string
-  storyIndex?: number
-  // イベントストーリー
-  eventId?: string
-  // メインストーリー
-  chapterId?: string
-  // カスタムストーリー
-  category?: string
-  customId?: string
+// アイドル情報
+interface Idol {
+  id: string    // アイドルのユニークID
+  name: string  // アイドルの名前
 }
 
-interface Story {
-  id: string                    // ユニークID
-  name: string                  // ストーリー名
-  source: StorySource           // ストーリーの出所
-  metadata?: Record<string, any> // 拡張可能なメタデータ
+// レアリティ
+type Rarity = 'SSR' | 'SR' | 'R'
+
+// プロデュースカード
+interface ProduceCard {
+  id: string      // カードのユニークID
+  name: string    // カード名
+  idolId: string  // 対象となるアイドルのID（必須、1:1）
+  rarity: Rarity  // レアリティ
 }
 
-interface Card {
-  id: string                    // カード名（ユニーク）
-  name: string                  // カード名
-  type: 'produce' | 'support'
-  rarity: 'SSR' | 'SR' | 'R'
-  stories: Story[]              // カードに紐づくストーリー
+// サポートカード
+interface SupportCard {
+  id: string            // カードのユニークID
+  name: string          // カード名
+  mainIdolId: string    // 主となるアイドルのID（必須、1:1）
+  appearingIdolIds: string[]  // 登場人物として登場するアイドルのIDリスト（0..*）
+  rarity: Rarity        // レアリティ
 }
 
+// プロデュースカードストーリー
+interface ProduceCardStory {
+  id: string          // ストーリーのユニークID
+  produceCardId: string  // 紐づくProduceCardのID
+  storyIndex: number  // ストーリーのインデックス（1, 2, 3）
+}
+
+// サポートカードストーリー
+interface SupportCardStory {
+  id: string          // ストーリーのユニークID
+  supportCardId: string  // 紐づくSupportCardのID
+  storyIndex: number  // ストーリーのインデックス（1, 2, 3）
+}
+
+// ストーリーデータの構造
 interface StoriesData {
   version: string
   lastUpdated: string
-  cards: Card[]
-  stories: Story[]              // カードに紐づかないストーリー
+  idols: Idol[]
+  produceCards: ProduceCard[]
+  supportCards: SupportCard[]
+  produceCardStories: ProduceCardStory[]
+  supportCardStories: SupportCardStory[]
 }
 ```
+
+### ビジネスルール（レアリティとストーリー数の関係）
+
+- **ProduceCard**: SSR=3話、SR・R=0話
+- **SupportCard**: SSR=3話、SR・R=2話
 
 ### ローカルストレージ構造
 ```typescript
@@ -127,35 +169,52 @@ gakumasu_comulist/
 │       └── update-stories.yml          # GitHub Actions設定
 ├── scripts/
 │   └── scrape-wiki.ts                 # Wikiスクレイピングスクリプト
+├── docs/
+│   ├── game-overview.md                # ゲーム概要と用語の関係性
+│   ├── data-model.md                   # データモデルの詳細
+│   └── plan.md                         # 実装計画（本ファイル）
 ├── src/
-│   ├── components/                    # Vueコンポーネント
+│   ├── components/                     # Presentation Layer（UI Layer）
 │   │   ├── StoryList.vue
 │   │   ├── StoryCard.vue
-│   │   ├── StoryItem.vue              # 個別ストーリー表示
+│   │   ├── StoryItem.vue               # 個別ストーリー表示
 │   │   ├── FilterPanel.vue
 │   │   ├── ExportImport.vue
-│   │   └── StoryForm.vue              # 手動ストーリー追加フォーム
-│   ├── composables/                   # Composition API（ビジネスロジック）
-│   │   ├── useStories.ts              # ストーリーデータ管理
-│   │   ├── useReadStatus.ts           # 読了状態管理
-│   │   └── useLocalStorage.ts         # ローカルストレージ管理
-│   ├── services/                      # サービス層（SOLID原則適用）
-│   │   ├── interfaces/
-│   │   │   ├── IStorageService.ts     # ストレージインターフェース
-│   │   │   ├── IStoryRepository.ts    # ストーリーリポジトリインターフェース
-│   │   │   └── IExportService.ts      # エクスポートサービスインターフェース
-│   │   ├── storage/
-│   │   │   └── LocalStorageService.ts # ローカルストレージ実装
-│   │   ├── repository/
-│   │   │   └── StoryRepository.ts    # ストーリーリポジトリ実装
-│   │   └── export/
-│   │       └── ExportService.ts      # エクスポートサービス実装
-│   ├── types/
-│   │   └── index.ts                   # TypeScript型定義
+│   │   └── StoryForm.vue               # 手動ストーリー追加フォーム
+│   ├── composables/                    # Application Layer
+│   │   ├── useStories.ts               # ストーリーデータ管理
+│   │   ├── useReadStatus.ts            # 読了状態管理
+│   │   └── useLocalStorage.ts          # ローカルストレージ管理
 │   ├── utils/
-│   │   ├── parser.ts                  # Wiki HTMLパーサー
-│   │   └── storyIdGenerator.ts        # ストーリーID生成
-│   ├── __tests__/                     # テストファイル
+│   │   ├── domain/                     # Domain Service Layer
+│   │   │   ├── storyCountCalculator.ts # レアリティとストーリー数の計算
+│   │   │   └── cardValidator.ts        # カードデータの妥当性検証
+│   │   ├── parser.ts                   # Wiki HTMLパーサー
+│   │   └── storyIdGenerator.ts         # ストーリーID生成
+│   ├── types/
+│   │   ├── domain/                     # Domain Model Layer
+│   │   │   ├── idol.ts                 # Idol エンティティ
+│   │   │   ├── card.ts                 # IdolCard, ProduceCard, SupportCard
+│   │   │   ├── story.ts                # Story, ProduceCardStory, SupportCardStory
+│   │   │   ├── typeGuards.ts           # 型ガード関数
+│   │   │   └── index.ts                # エクスポート
+│   │   └── index.ts                    # TypeScript型定義
+│   ├── services/
+│   │   ├── data-source/                # Data Acquisition Layer
+│   │   │   ├── IDataSource.ts          # データ取得インターフェース
+│   │   │   ├── ScrapingDataSource.ts   # スクレイピング実装（案1）
+│   │   │   └── ManualDataSource.ts     # 手動入力実装（案2）
+│   │   ├── interfaces/
+│   │   │   ├── IStorageService.ts      # ストレージインターフェース
+│   │   │   ├── IStoryRepository.ts     # ストーリーリポジトリインターフェース
+│   │   │   └── IExportService.ts       # エクスポートサービスインターフェース
+│   │   ├── storage/                    # Infrastructure Layer
+│   │   │   └── LocalStorageService.ts  # ローカルストレージ実装
+│   │   ├── repository/                 # Data Access Layer
+│   │   │   └── StoryRepository.ts      # ストーリーリポジトリ実装
+│   │   └── export/                     # Infrastructure Layer
+│   │       └── ExportService.ts        # エクスポートサービス実装
+│   ├── __tests__/                      # テストファイル
 │   │   ├── composables/
 │   │   │   ├── useStories.test.ts
 │   │   │   ├── useReadStatus.test.ts
@@ -164,18 +223,24 @@ gakumasu_comulist/
 │   │   │   ├── LocalStorageService.test.ts
 │   │   │   ├── StoryRepository.test.ts
 │   │   │   └── ExportService.test.ts
+│   │   ├── types/
+│   │   │   └── domain/
+│   │   │       └── typeGuards.test.ts
 │   │   └── utils/
+│   │       ├── domain/
+│   │       │   ├── storyCountCalculator.test.ts
+│   │       │   └── cardValidator.test.ts
 │   │       └── parser.test.ts
 │   ├── App.vue
 │   └── main.ts
 ├── public/
 │   └── data/
-│       └── stories.json               # スクレイピング結果（Git管理）
+│       └── stories.json                # スクレイピング結果（Git管理）
 ├── index.html
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
-├── vitest.config.ts                   # Vitest設定
+├── vitest.config.ts                    # Vitest設定
 └── README.md
 ```
 
@@ -187,9 +252,9 @@ gakumasu_comulist/
 - コンポーネントは表示ロジックのみ
 
 ### Open/Closed Principle (OCP)
-- ストーリーソースタイプは拡張可能な設計
-- 新しいストーリータイプを追加しても既存コードを変更しない
-- インターフェースベースの設計
+- エンティティタイプ（Idol、ProduceCard、SupportCard等）は拡張可能な設計
+- 新しいストーリータイプ（ProduceCardStory、SupportCardStory）を追加しても既存コードを変更しない
+- インターフェースベースの設計（IDataSource等）
 
 ### Liskov Substitution Principle (LSP)
 - インターフェースの実装は置き換え可能
@@ -232,36 +297,60 @@ export function useReadStatus() {
 
 ## 段階的実装順序
 
-### Phase 1: 基盤構築（1-3）
-1. プロジェクト設定（Vite、TypeScript、Vitest）
-2. 型定義（Story、Card、StorySource等）
-3. テスト環境構築とサンプルテスト
+### Phase 1: 基盤構築（完了）✓
 
-### Phase 2: データ層（4-6）
-4. ストレージサービスインターフェース定義（TDD）
-5. ローカルストレージサービス実装（TDD）
-6. ストーリーリポジトリ実装（TDD）
+1. ✓ プロジェクト設定（Vite、TypeScript、Vitest）
+2. ✓ 型定義（新設計に基づく） - `src/types/domain/`
+   - `idol.ts`: Idol エンティティ
+   - `card.ts`: IdolCard, ProduceCard, SupportCard
+   - `story.ts`: Story, ProduceCardStory, SupportCardStory
+   - `typeGuards.ts`: 型ガード関数
+3. ✓ テスト環境構築とサンプルテスト
 
-### Phase 3: ビジネスロジック層（7-9）
-7. useLocalStorage composable（TDD）
-8. useReadStatus composable（TDD）
-9. useStories composable（TDD）
+### Phase 2: ドメイン層とデータ層（一部完了）
 
-### Phase 4: スクレイピング（10-11）
-10. Wikiスクレイピングスクリプト実装
+4. ✓ ストレージサービスインターフェース定義 - `src/services/interfaces/IStorageService.ts`
+5. ✓ ローカルストレージサービス実装 - `src/services/storage/LocalStorageService.ts`
+6. **⏳ ストーリーリポジトリ実装（TDD）** ← 次に実装
+   - `src/services/repository/StoryRepository.ts`
+
+**新設計による追加レイヤー（完了）:**
+
+- ✓ **Domain Model Layer** (`src/types/domain/`)
+  - ゲーム固有のエンティティと型定義
+- ✓ **Domain Service Layer** (`src/utils/domain/`)
+  - `storyCountCalculator.ts`: レアリティとストーリー数の計算
+  - `cardValidator.ts`: カードデータの妥当性検証
+- ✓ **Data Acquisition Layer** (`src/services/data-source/`)
+  - `IDataSource.ts`: データ取得インターフェース定義
+
+### Phase 3: ビジネスロジック層（Application Layer）
+
+7. useLocalStorage composable（TDD） - `src/composables/useLocalStorage.ts`
+8. useReadStatus composable（TDD） - `src/composables/useReadStatus.ts`
+9. useStories composable（TDD） - `src/composables/useStories.ts`
+
+### Phase 4: データ取得層の実装（Data Acquisition Layer）
+
+10. IDataSource実装（ScrapingDataSource または ManualDataSource）
+    - `src/services/data-source/ScrapingDataSource.ts`（案1）
+    - `src/services/data-source/ManualDataSource.ts`（案2）
 11. GitHub Actions設定とテスト
 
-### Phase 5: UI実装（12-15）
-12. StoryItemコンポーネント（TDD）
-13. StoryListコンポーネント（TDD）
-14. FilterPanelコンポーネント（TDD）
-15. StoryFormコンポーネント（手動追加用、TDD）
+### Phase 5: UI実装（Presentation Layer）
 
-### Phase 6: エクスポート機能（16-17）
-16. エクスポートサービス実装（TDD）
-17. ExportImportコンポーネント（TDD）
+12. StoryItemコンポーネント（TDD） - `src/components/StoryItem.vue`
+13. StoryListコンポーネント（TDD） - `src/components/StoryList.vue`
+14. FilterPanelコンポーネント（TDD） - `src/components/FilterPanel.vue`
+15. StoryFormコンポーネント（手動追加用、TDD） - `src/components/StoryForm.vue`
 
-### Phase 7: 統合・完成（18-19）
+### Phase 6: エクスポート機能
+
+16. エクスポートサービス実装（TDD） - `src/services/export/ExportService.ts`
+17. ExportImportコンポーネント（TDD） - `src/components/ExportImport.vue`
+
+### Phase 7: 統合・完成
+
 18. メインUI（App.vue）統合
 19. 統合テストと動作確認
 
