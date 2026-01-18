@@ -17,10 +17,17 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-  "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vue-tsc": "^3.2.2"
+  },
   "bugs": {
     "url": "https://github.com/sisomoti/gakumasu_comulist/issues"
   },
-  "homepage": "https://github.com/sisomoti/gakumasu_comulist#readme"
+  "homepage": "https://github.com/sisomoti/gakumasu_comulist#readme",
+  "dependencies": {
+    "vue": "^3.5.26"
+  }
 }
