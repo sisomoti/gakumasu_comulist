@@ -2,6 +2,10 @@
 
 学マスのコミュ一覧の未読管理を行うWebシステム
 
+## 使い方
+
+<https://sisomoti.github.io/gakumasu_comulist/> にアクセスしてください。
+
 ## 開発のモチベーション
 
 ### アイマスP・いちオタクとして
