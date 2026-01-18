@@ -1,0 +1,15 @@
+1. プロジェクトの初期化
+    npm init で package.json 作成
+    必要な依存関係を定義
+2. Vite + Vue 3 + TypeScript の設定
+    vite、@vitejs/plugin-vue、vue などのインストール
+    vite.config.ts の作成
+    tsconfig.json の作成
+3. Vitest（テスト環境）の設定
+    vitest、@vue/test-utils などのインストール
+    vitest.config.ts の作成
+4. 基本的なディレクトリ構造の作成
+    src/ 配下の構造
+    public/data/ ディレクトリ（stories.json用）
+5. 最小限の動作確認
+    Hello World的なVueアプリで動作確認
