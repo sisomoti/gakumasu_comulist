@@ -1,5 +1,6 @@
 import type { IStoryRepository } from '../interfaces/IStoryRepository'
 import type {
+  Story,
   ProduceCardStory,
   SupportCardStory,
   StoriesData
@@ -41,9 +42,9 @@ export class StoryRepository implements IStoryRepository {
 
   /**
    * すべてのストーリーを取得する
-   * @returns プロデュースカードストーリーとサポートカードストーリーの配列
+   * @returns 全種類のストーリーの配列
    */
-  getAllStories(): (ProduceCardStory | SupportCardStory)[] {
+  getAllStories(): Story[] {
     return [
       ...this.storiesData.produceCardStories,
       ...this.storiesData.supportCardStories
@@ -55,7 +56,7 @@ export class StoryRepository implements IStoryRepository {
    * @param storyId ストーリーID
    * @returns 見つかったストーリー。見つからない場合はundefined
    */
-  findById(storyId: string): ProduceCardStory | SupportCardStory | undefined {
+  findById(storyId: string): Story | undefined {
     const produceStory = this.storiesData.produceCardStories.find(
       story => story.id === storyId
     )

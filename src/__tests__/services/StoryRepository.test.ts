@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { StoryRepository } from '../../services/repository/StoryRepository'
-import type { StoriesData } from '../../types/domain'
+import type { StoriesData, ProduceCardStory, SupportCardStory } from '../../types/domain'
 
 describe('StoryRepository', () => {
   let repository: StoryRepository
@@ -110,8 +110,8 @@ describe('StoryRepository', () => {
 
       expect(result).toBeDefined()
       expect(result?.id).toBe('produce-1-story-2')
-      expect(result?.produceCardId).toBe('produce-1')
-      expect(result?.storyIndex).toBe(2)
+      expect((result as ProduceCardStory).produceCardId).toBe('produce-1')
+      expect((result as ProduceCardStory).storyIndex).toBe(2)
     })
 
     it('サポートカードストーリーIDでストーリーを検索できる', () => {
@@ -119,8 +119,8 @@ describe('StoryRepository', () => {
 
       expect(result).toBeDefined()
       expect(result?.id).toBe('support-2-story-1')
-      expect('supportCardId' in result && result.supportCardId).toBe('support-2')
-      expect(result?.storyIndex).toBe(1)
+      expect((result as SupportCardStory).supportCardId).toBe('support-2')
+      expect((result as SupportCardStory).storyIndex).toBe(1)
     })
 
     it('存在しないストーリーIDの場合はundefinedを返す', () => {
