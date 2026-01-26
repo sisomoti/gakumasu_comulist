@@ -83,6 +83,17 @@ erDiagram
   - SR: 0個
   - R: 0個
 
+**所持状態の管理:**
+- **設計方針**: ProduceCard型の内部には所持状態のフィールドを持たない（分離型設計）
+- **理由**: 
+  - 外部データ（`StoriesData`）とユーザー固有の状態（所持/未所持）を分離するため
+  - 外部データの更新時にユーザーの所持状態を独立して保持できるため
+  - ドメインモデル（ProduceCard）とアプリケーション状態（所持状態）の責務を分離するため
+- **実装**: 所持状態は`LocalStorageData.cardOwnership: Record<string, boolean>`として別途管理される
+  - キー: カードID（`produceCard.id`）
+  - 値: 所持状態（`true` = 所持、`false` = 未所持）
+- **管理方法**: `useCardOwnership` composableを通じて所持状態を管理する
+
 ### SupportCard（サポート・カード）
 
 アイドルの様子を描いたカードの一種。主のアイドルの他に、登場人物として他のアイドルも複数人出てくることがある。
@@ -101,6 +112,17 @@ erDiagram
   - SSR: 3個
   - SR: 2個
   - R: 2個
+
+**所持状態の管理:**
+- **設計方針**: SupportCard型の内部には所持状態のフィールドを持たない（分離型設計）
+- **理由**: 
+  - 外部データ（`StoriesData`）とユーザー固有の状態（所持/未所持）を分離するため
+  - 外部データの更新時にユーザーの所持状態を独立して保持できるため
+  - ドメインモデル（SupportCard）とアプリケーション状態（所持状態）の責務を分離するため
+- **実装**: 所持状態は`LocalStorageData.cardOwnership: Record<string, boolean>`として別途管理される
+  - キー: カードID（`supportCard.id`）
+  - 値: 所持状態（`true` = 所持、`false` = 未所持）
+- **管理方法**: `useCardOwnership` composableを通じて所持状態を管理する
 
 ### Story（ストーリー）
 
