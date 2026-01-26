@@ -25,3 +25,6 @@ export {
   isProduceCardStory,
   isSupportCardStory,
 } from './typeGuards'
+
+// ユーティリティ関数をエクスポート
+export { getCardIdFromStory } from '../../utils/domain/storyUtils'
