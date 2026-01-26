@@ -217,9 +217,9 @@ interface LocalStorageData {
 gakumasu_comulist/
 ├── .github/
 │   └── workflows/
-│       └── update-stories.yml          # GitHub Actions設定
+│       └── update-stories.yml          # GitHub Actions設定（Phase 7で実装、許諾後）
 ├── scripts/
-│   └── scrape-wiki.ts                 # Wikiスクレイピングスクリプト
+│   └── scrape-wiki.ts                 # Wikiスクレイピングスクリプト（Phase 7で実装、許諾後）
 ├── docs/
 │   ├── game-overview.md                # ゲーム概要と用語の関係性
 │   ├── data-model.md                   # データモデルの詳細
@@ -230,7 +230,7 @@ gakumasu_comulist/
 │   │   ├── StoryCard.vue
 │   │   ├── StoryItem.vue               # 個別ストーリー表示
 │   │   ├── FilterPanel.vue
-│   │   ├── ExportImport.vue
+│   │   ├── ExportImport.vue              # エクスポート/インポートコンポーネント（Phase 8で実装）
 │   │   └── StoryForm.vue               # 手動ストーリー追加フォーム
 │   ├── composables/                    # Application Layer
 │   │   ├── useStories.ts               # ストーリーデータ管理
@@ -240,7 +240,7 @@ gakumasu_comulist/
 │   │   ├── domain/                     # Domain Service Layer
 │   │   │   ├── storyCountCalculator.ts # レアリティとストーリー数の計算
 │   │   │   └── cardValidator.ts        # カードデータの妥当性検証
-│   │   ├── parser.ts                   # Wiki HTMLパーサー
+│   │   ├── parser.ts                   # Wiki HTMLパーサー（Phase 7で実装、許諾後）
 │   │   └── storyIdGenerator.ts         # ストーリーID生成
 │   ├── types/
 │   │   ├── domain/                     # Domain Model Layer
@@ -253,18 +253,18 @@ gakumasu_comulist/
 │   ├── services/
 │   │   ├── data-source/                # Data Acquisition Layer
 │   │   │   ├── IDataSource.ts          # データ取得インターフェース
-│   │   │   ├── ScrapingDataSource.ts   # スクレイピング実装（案1）
-│   │   │   └── ManualDataSource.ts     # 手動入力実装（案2）
+│   │   │   ├── ScrapingDataSource.ts   # スクレイピング実装（Phase 7で実装、許諾後）
+│   │   │   └── ManualDataSource.ts     # 手動入力実装（実装済み）
 │   │   ├── interfaces/
 │   │   │   ├── IStorageService.ts      # ストレージインターフェース
 │   │   │   ├── IStoryRepository.ts     # ストーリーリポジトリインターフェース
-│   │   │   └── IExportService.ts       # エクスポートサービスインターフェース
+│   │   │   └── IExportService.ts       # エクスポートサービスインターフェース（Phase 8で実装）
 │   │   ├── storage/                    # Infrastructure Layer
 │   │   │   └── LocalStorageService.ts  # ローカルストレージ実装
 │   │   ├── repository/                 # Data Access Layer
 │   │   │   └── StoryRepository.ts      # ストーリーリポジトリ実装
 │   │   └── export/                     # Infrastructure Layer
-│   │       └── ExportService.ts        # エクスポートサービス実装
+│   │       └── ExportService.ts        # エクスポートサービス実装（Phase 8で実装）
 │   ├── __tests__/                      # テストファイル
 │   │   ├── composables/
 │   │   │   ├── useStories.test.ts
@@ -273,7 +273,7 @@ gakumasu_comulist/
 │   │   ├── services/
 │   │   │   ├── LocalStorageService.test.ts
 │   │   │   ├── StoryRepository.test.ts
-│   │   │   └── ExportService.test.ts
+│   │   │   └── ExportService.test.ts   # エクスポートサービステスト（Phase 8で実装）
 │   │   ├── types/
 │   │   │   └── domain/
 │   │   │       └── typeGuards.test.ts
@@ -396,12 +396,11 @@ export function useReadStatus() {
 2. useReadStatus composable（TDD） - `src/composables/useReadStatus.ts`
 3. useStories composable（TDD） - `src/composables/useStories.ts`
 
-### Phase 4: データ取得層の実装（Data Acquisition Layer）
+### Phase 4: データ取得層の実装（Data Acquisition Layer）（完了）✓
 
-1. IDataSource実装（ScrapingDataSource または ManualDataSource）
-   - `src/services/data-source/ScrapingDataSource.ts`（案1）
-   - `src/services/data-source/ManualDataSource.ts`（案2）
-2. GitHub Actions設定とテスト
+1. ✓ IDataSource実装（ManualDataSource）
+   - `src/services/data-source/ManualDataSource.ts`（実装済み）
+2. ⏸️ スクレイピング関連実装はPhase 8に延期（許諾待ち）
 
 ### Phase 5: UI実装（Presentation Layer）
 
@@ -410,15 +409,27 @@ export function useReadStatus() {
 3. FilterPanelコンポーネント（TDD） - `src/components/FilterPanel.vue`
 4. StoryFormコンポーネント（手動追加用、TDD） - `src/components/StoryForm.vue`
 
-### Phase 6: エクスポート機能
-
-1. エクスポートサービス実装（TDD） - `src/services/export/ExportService.ts`
-2. ExportImportコンポーネント（TDD） - `src/components/ExportImport.vue`
-
-### Phase 7: 統合・完成
+### Phase 6: 統合・完成
 
 1. メインUI（App.vue）統合
 2. 統合テストと動作確認
+
+### Phase 7: スクレイピング機能実装（許諾後実装）
+
+**注意**: このPhaseはWikiスクレイピングの許諾が降りてから実装する。
+
+1. ScrapingDataSource実装（TDD） - `src/services/data-source/ScrapingDataSource.ts`
+2. スクレイピングスクリプト実装 - `scripts/scrape-wiki.ts`
+   - Wiki HTMLパーサー実装 - `src/utils/parser.ts`
+3. GitHub Actions設定 - `.github/workflows/update-stories.yml`
+   - 定期実行設定（1日1回、午前3時UTC）
+   - 手動実行対応（workflow_dispatch）
+4. スクレイピング機能のテスト
+
+### Phase 8: エクスポート機能
+
+1. エクスポートサービス実装（TDD） - `src/services/export/ExportService.ts`
+2. ExportImportコンポーネント（TDD） - `src/components/ExportImport.vue`
 
 ## コミット戦略
 
