@@ -12,6 +12,7 @@ const STORAGE_KEY = 'cardOwnership'
  * 
  * ストーリーの読了状態（useReadStatus）と同様のパターンで実装。
  * ローカルストレージに`cardOwnership: Record<string, boolean>`として保存される。
+ * useReadStatus と一貫性のある実装パターンを採用している。
  * 
  * @param storageService ストレージサービス（デフォルトはLocalStorageService）
  * @returns カード所持状態を管理する関数群
