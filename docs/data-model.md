@@ -29,6 +29,10 @@ erDiagram
         enum rarity
     }
     
+    Story {
+        string id
+    }
+    
     ProduceCardStory {
         string id
         string produceCardId
@@ -41,6 +45,11 @@ erDiagram
         number storyIndex
     }
 ```
+
+**注意**: MermaidのER図では継承関係を直接表現できないため、以下の点を説明文で補足します：
+- `Story`はすべてのストーリータイプの基底型（抽象エンティティ）として定義されています
+- `ProduceCardStory`と`SupportCardStory`は`Story`を継承しています
+- 実装では`StoryRepository.getAllStories()`や`findById()`などで`Story`型として統一して扱われます
 
 ## 各エンティティの詳細説明
 
@@ -93,12 +102,23 @@ erDiagram
   - SR: 2個
   - R: 2個
 
-### ProduceCardStory（プロデュース・カード・ストーリー）
+### Story（ストーリー）
 
-ProduceCardに紐づくストーリー。
+すべてのストーリータイプの基底型。将来の拡張用（親愛度コミュ、育成シナリオ、初星コミュ、イベントコミュなど）に対応するための抽象エンティティ。
 
 **属性:**
 - `id: string` - ストーリーのユニークID
+
+**継承関係:**
+- `ProduceCardStory`と`SupportCardStory`が`Story`を継承しています
+- 実装では`StoryRepository.getAllStories()`や`findById()`などで`Story`型として統一して扱われます
+
+### ProduceCardStory（プロデュース・カード・ストーリー）
+
+ProduceCardに紐づくストーリー。`Story`を継承しています。
+
+**属性:**
+- `id: string` - ストーリーのユニークID（`Story`から継承）
 - `produceCardId: string` - 紐づくProduceCardのID
 - `storyIndex: number` - ストーリーのインデックス（1, 2, 3）
 
@@ -107,10 +127,10 @@ ProduceCardに紐づくストーリー。
 
 ### SupportCardStory（サポート・カード・ストーリー）
 
-SupportCardに紐づくストーリー。
+SupportCardに紐づくストーリー。`Story`を継承しています。
 
 **属性:**
-- `id: string` - ストーリーのユニークID
+- `id: string` - ストーリーのユニークID（`Story`から継承）
 - `supportCardId: string` - 紐づくSupportCardのID
 - `storyIndex: number` - ストーリーのインデックス（1, 2, 3）
 
