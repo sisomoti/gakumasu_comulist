@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0-dummy",
+  "lastUpdated": "2024-01-01T00:00:00.000Z",
+  "idols": [
+    { "id": "idol-1", "name": "天海春香" },
+    { "id": "idol-2", "name": "如月千早" },
+    { "id": "idol-3", "name": "星井美希" },
+    { "id": "idol-4", "name": "高槻やよい" },
+    { "id": "idol-5", "name": "萩原雪歩" }
+  ]
+}

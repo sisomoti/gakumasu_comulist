@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0-dummy",
+  "lastUpdated": "2024-01-01T00:00:00.000Z",
+  "produceCards": [
+    { "id": "produce-ssr-1", "name": "春香 SSR", "idolId": "idol-1", "rarity": "SSR" },
+    { "id": "produce-ssr-2", "name": "千早 SSR", "idolId": "idol-2", "rarity": "SSR" },
+    { "id": "produce-sr-1", "name": "美希 SR", "idolId": "idol-3", "rarity": "SR" },
+    { "id": "produce-r-1", "name": "やよい R", "idolId": "idol-4", "rarity": "R" }
+  ]
+}
