@@ -113,6 +113,17 @@ erDiagram
 - `ProduceCardStory`と`SupportCardStory`が`Story`を継承しています
 - 実装では`StoryRepository.getAllStories()`や`findById()`などで`Story`型として統一して扱われます
 
+**読了状態の管理:**
+- **設計方針**: Story型の内部には読了/未読状態のフィールドを持たない（分離型設計）
+- **理由**: 
+  - 外部データ（`StoriesData`）とユーザー固有の状態（読了/未読）を分離するため
+  - 外部データの更新時にユーザーの読了状態を独立して保持できるため
+  - ドメインモデル（Story）とアプリケーション状態（読了状態）の責務を分離するため
+- **実装**: 読了状態は`LocalStorageData.readStatus: Record<string, boolean>`として別途管理される
+  - キー: ストーリーID（`story.id`）
+  - 値: 読了状態（`true` = 読了、`false` = 未読）
+- **管理方法**: `useReadStatus` composableを通じて読了状態を管理する
+
 ### ProduceCardStory（プロデュース・カード・ストーリー）
 
 ProduceCardに紐づくストーリー。`Story`を継承しています。
