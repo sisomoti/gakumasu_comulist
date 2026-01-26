@@ -150,8 +150,9 @@ interface StoriesData {
 ### ローカルストレージ構造
 ```typescript
 interface LocalStorageData {
-  readStatus: Record<string, boolean>  // storyId -> readStatus
-  customStories: Story[]               // 手動追加したストーリー
+  readStatus: Record<string, boolean>      // storyId -> readStatus
+  cardOwnership: Record<string, boolean>  // cardId -> owned
+  customStories: Story[]                  // 手動追加したストーリー
   lastSync: string
   settings?: {
     filterUnreadOnly?: boolean
