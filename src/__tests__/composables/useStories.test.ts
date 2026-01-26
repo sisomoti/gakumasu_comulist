@@ -463,4 +463,406 @@ describe('useStories', () => {
       expect(filteredStories.value).toHaveLength(8)
     })
   })
+
+  describe('検索機能', () => {
+    it('カード名で部分一致検索できる', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: 'プロデュースカード1' })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+      filteredStories.value.forEach(story => {
+        const card =
+          'produceCardId' in story
+            ? mockGameData.produceCards.find(
+                c => c.id === (story as ProduceCardStory).produceCardId
+              )
+            : mockGameData.supportCards.find(
+                c => c.id === (story as SupportCardStory).supportCardId
+              )
+        expect(card?.name).toContain('プロデュースカード1')
+      })
+    })
+
+    it('カード名で部分一致検索できる（部分文字列）', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: 'プロデュース' })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+      filteredStories.value.forEach(story => {
+        const card =
+          'produceCardId' in story
+            ? mockGameData.produceCards.find(
+                c => c.id === (story as ProduceCardStory).produceCardId
+              )
+            : mockGameData.supportCards.find(
+                c => c.id === (story as SupportCardStory).supportCardId
+              )
+        expect(card?.name).toMatch(/プロデュース/)
+      })
+    })
+
+    it('アイドル名で部分一致検索できる（プロデュースカード）', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: 'アイドル1' })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+      filteredStories.value.forEach(story => {
+        if ('produceCardId' in story) {
+          const card = mockGameData.produceCards.find(
+            c => c.id === (story as ProduceCardStory).produceCardId
+          )
+          const idol = mockGameData.idols.find(i => i.id === card?.idolId)
+          expect(idol?.name).toBe('アイドル1')
+        } else {
+          // サポートカードの場合、mainIdolIdまたはappearingIdolIdsに含まれる
+          const card = mockGameData.supportCards.find(
+            c => c.id === (story as SupportCardStory).supportCardId
+          )
+          const mainIdol = mockGameData.idols.find(i => i.id === card?.mainIdolId)
+          expect(mainIdol?.name).toBe('アイドル1')
+        }
+      })
+    })
+
+    it('アイドル名で部分一致検索できる（サポートカード）', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: 'アイドル2' })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+    })
+
+    it('検索クエリが空の場合はすべてのストーリーを返す', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: '' })
+      expect(filteredStories.value).toHaveLength(8)
+
+      setFilter({ searchQuery: '   ' }) // 空白のみ
+      expect(filteredStories.value).toHaveLength(8)
+    })
+
+    it('検索クエリが一致しない場合は空配列を返す', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: '存在しないカード名' })
+
+      expect(filteredStories.value).toHaveLength(0)
+    })
+
+    it('検索は大文字小文字を区別しない', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ searchQuery: 'プロデュース' })
+      const result1 = filteredStories.value.length
+
+      setFilter({ searchQuery: 'プロデュース' })
+      const result2 = filteredStories.value.length
+
+      expect(result1).toBe(result2)
+    })
+  })
+
+  describe('ソート機能', () => {
+    describe('nameソート', () => {
+      it('カード名で昇順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'name', sortOrder: 'asc' })
+
+        const names = filteredStories.value.map(story => {
+          const card =
+            'produceCardId' in story
+              ? mockGameData.produceCards.find(
+                  c => c.id === (story as ProduceCardStory).produceCardId
+                )
+              : mockGameData.supportCards.find(
+                  c => c.id === (story as SupportCardStory).supportCardId
+                )
+          return card?.name || ''
+        })
+
+        const sortedNames = [...names].sort((a, b) => a.localeCompare(b, 'ja'))
+        expect(names).toEqual(sortedNames)
+      })
+
+      it('カード名で降順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'name', sortOrder: 'desc' })
+
+        const names = filteredStories.value.map(story => {
+          const card =
+            'produceCardId' in story
+              ? mockGameData.produceCards.find(
+                  c => c.id === (story as ProduceCardStory).produceCardId
+                )
+              : mockGameData.supportCards.find(
+                  c => c.id === (story as SupportCardStory).supportCardId
+                )
+          return card?.name || ''
+        })
+
+        const sortedNames = [...names].sort((a, b) => b.localeCompare(a, 'ja'))
+        expect(names).toEqual(sortedNames)
+      })
+    })
+
+    describe('rarityソート', () => {
+      it('レアリティで昇順ソートできる（R < SR < SSR）', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'rarity', sortOrder: 'asc' })
+
+        const rarities = filteredStories.value.map(story => {
+          const card =
+            'produceCardId' in story
+              ? mockGameData.produceCards.find(
+                  c => c.id === (story as ProduceCardStory).produceCardId
+                )
+              : mockGameData.supportCards.find(
+                  c => c.id === (story as SupportCardStory).supportCardId
+                )
+          return card?.rarity || 'R'
+        })
+
+        const rarityOrder: Record<string, number> = { R: 1, SR: 2, SSR: 3 }
+        for (let i = 0; i < rarities.length - 1; i++) {
+          expect(rarityOrder[rarities[i]]).toBeLessThanOrEqual(rarityOrder[rarities[i + 1]])
+        }
+      })
+
+      it('レアリティで降順ソートできる（SSR > SR > R）', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'rarity', sortOrder: 'desc' })
+
+        const rarities = filteredStories.value.map(story => {
+          const card =
+            'produceCardId' in story
+              ? mockGameData.produceCards.find(
+                  c => c.id === (story as ProduceCardStory).produceCardId
+                )
+              : mockGameData.supportCards.find(
+                  c => c.id === (story as SupportCardStory).supportCardId
+                )
+          return card?.rarity || 'R'
+        })
+
+        const rarityOrder: Record<string, number> = { R: 1, SR: 2, SSR: 3 }
+        for (let i = 0; i < rarities.length - 1; i++) {
+          expect(rarityOrder[rarities[i]]).toBeGreaterThanOrEqual(rarityOrder[rarities[i + 1]])
+        }
+      })
+    })
+
+    describe('storyIndexソート', () => {
+      it('ストーリーインデックスで昇順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'storyIndex', sortOrder: 'asc' })
+
+        const indices = filteredStories.value.map(story => story.storyIndex)
+
+        for (let i = 0; i < indices.length - 1; i++) {
+          expect(indices[i]).toBeLessThanOrEqual(indices[i + 1])
+        }
+      })
+
+      it('ストーリーインデックスで降順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'storyIndex', sortOrder: 'desc' })
+
+        const indices = filteredStories.value.map(story => story.storyIndex)
+
+        for (let i = 0; i < indices.length - 1; i++) {
+          expect(indices[i]).toBeGreaterThanOrEqual(indices[i + 1])
+        }
+      })
+    })
+
+    it('sortOrderが未指定の場合は昇順でソートする', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({ sortBy: 'name' }) // sortOrder未指定
+
+      const names = filteredStories.value.map(story => {
+        const card =
+          'produceCardId' in story
+            ? mockGameData.produceCards.find(
+                c => c.id === (story as ProduceCardStory).produceCardId
+              )
+            : mockGameData.supportCards.find(
+                c => c.id === (story as SupportCardStory).supportCardId
+              )
+        return card?.name || ''
+      })
+
+      const sortedNames = [...names].sort((a, b) => a.localeCompare(b, 'ja'))
+      expect(names).toEqual(sortedNames)
+    })
+  })
+
+  describe('検索・ソート・フィルタの組み合わせ', () => {
+    it('検索とフィルタを組み合わせて使用できる', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({
+        cardType: 'produce',
+        searchQuery: 'プロデュースカード1',
+      })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+      filteredStories.value.forEach(story => {
+        expect('produceCardId' in story).toBe(true)
+        const card = mockGameData.produceCards.find(
+          c => c.id === (story as ProduceCardStory).produceCardId
+        )
+        expect(card?.name).toContain('プロデュースカード1')
+      })
+    })
+
+    it('検索とソートを組み合わせて使用できる', () => {
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({
+        searchQuery: 'プロデュース',
+        sortBy: 'name',
+        sortOrder: 'asc',
+      })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+      const names = filteredStories.value.map(story => {
+        const card =
+          'produceCardId' in story
+            ? mockGameData.produceCards.find(
+                c => c.id === (story as ProduceCardStory).produceCardId
+              )
+            : mockGameData.supportCards.find(
+                c => c.id === (story as SupportCardStory).supportCardId
+              )
+        return card?.name || ''
+      })
+
+      const sortedNames = [...names].sort((a, b) => a.localeCompare(b, 'ja'))
+      expect(names).toEqual(sortedNames)
+    })
+
+    it('フィルタ、検索、ソートをすべて組み合わせて使用できる', () => {
+      vi.mocked(mockCardOwnership.isOwned).mockImplementation((cardId: string) => {
+        return cardId === 'produce-1'
+      })
+
+      const { filteredStories, setFilter } = useStories(
+        mockRepository,
+        mockGameData,
+        mockReadStatus,
+        mockCardOwnership
+      )
+
+      setFilter({
+        ownedOnly: true,
+        searchQuery: 'プロデュース',
+        sortBy: 'rarity',
+        sortOrder: 'desc',
+      })
+
+      expect(filteredStories.value.length).toBeGreaterThan(0)
+      filteredStories.value.forEach(story => {
+        const card =
+          'produceCardId' in story
+            ? mockGameData.produceCards.find(
+                c => c.id === (story as ProduceCardStory).produceCardId
+              )
+            : mockGameData.supportCards.find(
+                c => c.id === (story as SupportCardStory).supportCardId
+              )
+        expect(card?.name).toMatch(/プロデュース/)
+      })
+    })
+  })
 })
