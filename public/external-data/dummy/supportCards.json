@@ -24,9 +24,23 @@
       "rarity": "SR"
     },
     {
+      "id": "support-sr-2",
+      "name": "千早 SR",
+      "mainIdolId": "idol-2",
+      "appearingIdolIds": [],
+      "rarity": "SR"
+    },
+    {
       "id": "support-r-1",
       "name": "やよい R",
       "mainIdolId": "idol-4",
+      "appearingIdolIds": [],
+      "rarity": "R"
+    },
+    {
+      "id": "support-r-2",
+      "name": "美希 R",
+      "mainIdolId": "idol-3",
       "appearingIdolIds": [],
       "rarity": "R"
     }
