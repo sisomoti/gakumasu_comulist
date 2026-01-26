@@ -27,7 +27,7 @@ export interface StoryFilter {
   /** 検索クエリ（カード名またはアイドル名で部分一致検索） */
   searchQuery?: string
   /** ソートキー */
-  sortBy?: 'name' | 'rarity'
+  sortBy?: 'name' | 'rarity' | 'idolId' | 'cardId'
   /** ソート順 */
   sortOrder?: 'asc' | 'desc'
 }
@@ -188,6 +188,26 @@ export function useStories(
           case 'rarity': {
             const rarityOrder: Record<Rarity, number> = { SSR: 3, SR: 2, R: 1 }
             compareResult = rarityOrder[cardA.rarity] - rarityOrder[cardB.rarity]
+            break
+          }
+          case 'idolId': {
+            // ProduceCardの場合はidolId、SupportCardの場合はmainIdolIdでソート
+            const idolIdA = 'idolId' in cardA ? cardA.idolId : cardA.mainIdolId
+            const idolIdB = 'idolId' in cardB ? cardB.idolId : cardB.mainIdolId
+            compareResult = idolIdA.localeCompare(idolIdB, 'ja')
+            break
+          }
+          case 'cardId': {
+            // カードID（登場順）でソート
+            const cardIdA =
+              'produceCardId' in a
+                ? (a as ProduceCardStory).produceCardId
+                : (a as SupportCardStory).supportCardId
+            const cardIdB =
+              'produceCardId' in b
+                ? (b as ProduceCardStory).produceCardId
+                : (b as SupportCardStory).supportCardId
+            compareResult = cardIdA.localeCompare(cardIdB, 'ja')
             break
           }
         }

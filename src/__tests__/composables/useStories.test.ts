@@ -714,6 +714,104 @@ describe('useStories', () => {
       })
     })
 
+    describe('idolIdソート', () => {
+      it('アイドルIDで昇順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'idolId', sortOrder: 'asc' })
+
+        const idolIds = filteredStories.value.map(story => {
+          const card =
+            'produceCardId' in story
+              ? mockGameData.produceCards.find(
+                  c => c.id === (story as ProduceCardStory).produceCardId
+                )
+              : mockGameData.supportCards.find(
+                  c => c.id === (story as SupportCardStory).supportCardId
+                )
+          if (!card) return ''
+          return 'idolId' in card ? card.idolId : card.mainIdolId
+        })
+
+        const sortedIdolIds = [...idolIds].sort((a, b) => a.localeCompare(b, 'ja'))
+        expect(idolIds).toEqual(sortedIdolIds)
+      })
+
+      it('アイドルIDで降順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'idolId', sortOrder: 'desc' })
+
+        const idolIds = filteredStories.value.map(story => {
+          const card =
+            'produceCardId' in story
+              ? mockGameData.produceCards.find(
+                  c => c.id === (story as ProduceCardStory).produceCardId
+                )
+              : mockGameData.supportCards.find(
+                  c => c.id === (story as SupportCardStory).supportCardId
+                )
+          if (!card) return ''
+          return 'idolId' in card ? card.idolId : card.mainIdolId
+        })
+
+        const sortedIdolIds = [...idolIds].sort((a, b) => b.localeCompare(a, 'ja'))
+        expect(idolIds).toEqual(sortedIdolIds)
+      })
+    })
+
+    describe('cardIdソート', () => {
+      it('カードID（登場順）で昇順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'cardId', sortOrder: 'asc' })
+
+        const cardIds = filteredStories.value.map(story => {
+          return 'produceCardId' in story
+            ? (story as ProduceCardStory).produceCardId
+            : (story as SupportCardStory).supportCardId
+        })
+
+        const sortedCardIds = [...cardIds].sort((a, b) => a.localeCompare(b, 'ja'))
+        expect(cardIds).toEqual(sortedCardIds)
+      })
+
+      it('カードID（登場順）で降順ソートできる', () => {
+        const { filteredStories, setFilter } = useStories(
+          mockRepository,
+          mockGameData,
+          mockReadStatus,
+          mockCardOwnership
+        )
+
+        setFilter({ sortBy: 'cardId', sortOrder: 'desc' })
+
+        const cardIds = filteredStories.value.map(story => {
+          return 'produceCardId' in story
+            ? (story as ProduceCardStory).produceCardId
+            : (story as SupportCardStory).supportCardId
+        })
+
+        const sortedCardIds = [...cardIds].sort((a, b) => b.localeCompare(a, 'ja'))
+        expect(cardIds).toEqual(sortedCardIds)
+      })
+    })
+
     it('sortOrderが未指定の場合は昇順でソートする', () => {
       const { filteredStories, setFilter } = useStories(
         mockRepository,
