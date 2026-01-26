@@ -1,17 +1,13 @@
 /**
  * Domain Model Layer
- * 
+ *
  * ゲーム固有のエンティティと型定義をエクスポートする。
  */
 
 export type { Idol } from './idol'
 export type { Rarity, IdolCard, ProduceCard, SupportCard } from './card'
-export type {
-  Story,
-  ProduceCardStory,
-  SupportCardStory,
-  StoriesData
-} from './story'
+export type { Story, ProduceCardStory, SupportCardStory } from './story'
+export type { ExternalGameData } from './externalData'
 
 // 型ガード関数をエクスポート
 export {
@@ -22,5 +18,5 @@ export {
   isSupportCard,
   isStory,
   isProduceCardStory,
-  isSupportCardStory
+  isSupportCardStory,
 } from './typeGuards'

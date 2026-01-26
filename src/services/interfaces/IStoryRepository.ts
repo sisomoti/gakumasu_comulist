@@ -1,13 +1,9 @@
-import type {
-  Story,
-  ProduceCardStory,
-  SupportCardStory,
-} from '../../types/domain'
+import type { Story, ProduceCardStory, SupportCardStory } from '../../types/domain'
 
 /**
  * ストーリーリポジトリのインターフェース
- * 
- * StoriesDataからストーリーを取得・検索するためのインターフェース。
+ *
+ * ExternalGameDataからストーリーを取得・検索するためのインターフェース。
  * SOLID原則のDependency Inversion Principle (DIP) に準拠。
  */
 export interface IStoryRepository {
@@ -27,7 +23,7 @@ export interface IStoryRepository {
    * すべてのストーリーを取得する
    * @returns 全種類のストーリーの配列
    */
-  getAllStories(): (Story)[]
+  getAllStories(): Story[]
 
   /**
    * ストーリーIDでストーリーを検索する

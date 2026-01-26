@@ -133,8 +133,8 @@ interface SupportCardStory {
   storyIndex: number // ストーリーのインデックス（1, 2, 3）
 }
 
-// ストーリーデータの構造
-interface StoriesData {
+// 外部ゲームデータの構造
+interface ExternalGameData {
   version: string
   lastUpdated: string
   idols: Idol[]

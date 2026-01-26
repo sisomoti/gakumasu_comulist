@@ -92,7 +92,7 @@ erDiagram
 
 - **設計方針**: ProduceCard型の内部には所持状態のフィールドを持たない（分離型設計）
 - **理由**:
-  - 外部データ（`StoriesData`）とユーザー固有の状態（所持/未所持）を分離するため
+  - 外部データ（`ExternalGameData`）とユーザー固有の状態（所持/未所持）を分離するため
   - 外部データの更新時にユーザーの所持状態を独立して保持できるため
   - ドメインモデル（ProduceCard）とアプリケーション状態（所持状態）の責務を分離するため
 - **実装**: 所持状態は`LocalStorageData.cardOwnership: Record<string, boolean>`として別途管理される
@@ -125,7 +125,7 @@ erDiagram
 
 - **設計方針**: SupportCard型の内部には所持状態のフィールドを持たない（分離型設計）
 - **理由**:
-  - 外部データ（`StoriesData`）とユーザー固有の状態（所持/未所持）を分離するため
+  - 外部データ（`ExternalGameData`）とユーザー固有の状態（所持/未所持）を分離するため
   - 外部データの更新時にユーザーの所持状態を独立して保持できるため
   - ドメインモデル（SupportCard）とアプリケーション状態（所持状態）の責務を分離するため
 - **実装**: 所持状態は`LocalStorageData.cardOwnership: Record<string, boolean>`として別途管理される
@@ -150,7 +150,7 @@ erDiagram
 
 - **設計方針**: Story型の内部には読了/未読状態のフィールドを持たない（分離型設計）
 - **理由**:
-  - 外部データ（`StoriesData`）とユーザー固有の状態（読了/未読）を分離するため
+  - 外部データ（`ExternalGameData`）とユーザー固有の状態（読了/未読）を分離するため
   - 外部データの更新時にユーザーの読了状態を独立して保持できるため
   - ドメインモデル（Story）とアプリケーション状態（読了状態）の責務を分離するため
 - **実装**: 読了状態は`LocalStorageData.readStatus: Record<string, boolean>`として別途管理される

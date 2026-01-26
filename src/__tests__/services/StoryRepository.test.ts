@@ -1,39 +1,51 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { StoryRepository } from '../../services/repository/StoryRepository'
-import type { StoriesData, ProduceCardStory, SupportCardStory } from '../../types/domain'
+import type { ExternalGameData, ProduceCardStory, SupportCardStory } from '../../types/domain'
 
 describe('StoryRepository', () => {
   let repository: StoryRepository
-  let mockStoriesData: StoriesData
+  let mockExternalGameData: ExternalGameData
 
   beforeEach(() => {
-    mockStoriesData = {
+    mockExternalGameData = {
       version: '1.0.0',
       lastUpdated: '2024-01-01T00:00:00Z',
       idols: [],
       produceCards: [
         { id: 'produce-1', name: 'プロデュースカード1', idolId: 'idol-1', rarity: 'SSR' },
-        { id: 'produce-2', name: 'プロデュースカード2', idolId: 'idol-2', rarity: 'SR' }
+        { id: 'produce-2', name: 'プロデュースカード2', idolId: 'idol-2', rarity: 'SR' },
       ],
       supportCards: [
-        { id: 'support-1', name: 'サポートカード1', mainIdolId: 'idol-1', appearingIdolIds: [], rarity: 'SSR' },
-        { id: 'support-2', name: 'サポートカード2', mainIdolId: 'idol-2', appearingIdolIds: [], rarity: 'SR' }
+        {
+          id: 'support-1',
+          name: 'サポートカード1',
+          mainIdolId: 'idol-1',
+          appearingIdolIds: [],
+          rarity: 'SSR',
+        },
+        {
+          id: 'support-2',
+          name: 'サポートカード2',
+          mainIdolId: 'idol-2',
+          appearingIdolIds: [],
+          rarity: 'SR',
+        },
       ],
       produceCardStories: [
         { id: 'produce-1-story-1', produceCardId: 'produce-1', storyIndex: 1 },
         { id: 'produce-1-story-2', produceCardId: 'produce-1', storyIndex: 2 },
-        { id: 'produce-1-story-3', produceCardId: 'produce-1', storyIndex: 3 }
+        { id: 'produce-1-story-3', produceCardId: 'produce-1', storyIndex: 3 },
       ],
       supportCardStories: [
         { id: 'support-1-story-1', supportCardId: 'support-1', storyIndex: 1 },
         { id: 'support-1-story-2', supportCardId: 'support-1', storyIndex: 2 },
         { id: 'support-1-story-3', supportCardId: 'support-1', storyIndex: 3 },
         { id: 'support-2-story-1', supportCardId: 'support-2', storyIndex: 1 },
-        { id: 'support-2-story-2', supportCardId: 'support-2', storyIndex: 2 }
-      ]
+        { id: 'support-2-story-2', supportCardId: 'support-2', storyIndex: 2 },
+      ],
     }
 
-    repository = new StoryRepository(mockStoriesData)
+    repository = new StoryRepository(mockExternalGameData)
   })
 
   describe('getAllProduceCardStories', () => {
@@ -47,9 +59,9 @@ describe('StoryRepository', () => {
     })
 
     it('プロデュースカードストーリーが存在しない場合は空配列を返す', () => {
-      const emptyData: StoriesData = {
-        ...mockStoriesData,
-        produceCardStories: []
+      const emptyData: ExternalGameData = {
+        ...mockExternalGameData,
+        produceCardStories: [],
       }
       const emptyRepository = new StoryRepository(emptyData)
 
@@ -69,9 +81,9 @@ describe('StoryRepository', () => {
     })
 
     it('サポートカードストーリーが存在しない場合は空配列を返す', () => {
-      const emptyData: StoriesData = {
-        ...mockStoriesData,
-        supportCardStories: []
+      const emptyData: ExternalGameData = {
+        ...mockExternalGameData,
+        supportCardStories: [],
       }
       const emptyRepository = new StoryRepository(emptyData)
 
@@ -91,10 +103,10 @@ describe('StoryRepository', () => {
     })
 
     it('ストーリーが存在しない場合は空配列を返す', () => {
-      const emptyData: StoriesData = {
-        ...mockStoriesData,
+      const emptyData: ExternalGameData = {
+        ...mockExternalGameData,
         produceCardStories: [],
-        supportCardStories: []
+        supportCardStories: [],
       }
       const emptyRepository = new StoryRepository(emptyData)
 
