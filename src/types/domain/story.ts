@@ -38,6 +38,7 @@ export interface SupportCardStory extends Story {
   storyIndex: number
 }
 
+// FIXME: 別なファイルに分ける, 命名が微妙なので見直し
 /**
  * ストーリーデータの構造
  * 
