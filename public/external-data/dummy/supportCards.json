@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0-dummy",
+  "lastUpdated": "2024-01-01T00:00:00.000Z",
+  "supportCards": [
+    {
+      "id": "support-ssr-1",
+      "name": "春香×千早 SSR",
+      "mainIdolId": "idol-1",
+      "appearingIdolIds": ["idol-2"],
+      "rarity": "SSR"
+    },
+    {
+      "id": "support-ssr-2",
+      "name": "美希×やよい SSR",
+      "mainIdolId": "idol-3",
+      "appearingIdolIds": ["idol-4"],
+      "rarity": "SSR"
+    },
+    {
+      "id": "support-sr-1",
+      "name": "雪歩 SR",
+      "mainIdolId": "idol-5",
+      "appearingIdolIds": [],
+      "rarity": "SR"
+    },
+    {
+      "id": "support-r-1",
+      "name": "やよい R",
+      "mainIdolId": "idol-4",
+      "appearingIdolIds": [],
+      "rarity": "R"
+    }
+  ]
+}
