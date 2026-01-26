@@ -53,7 +53,10 @@
       "markdownlint-cli2 --fix",
       "prettier --write"
     ],
-    "*.{js,ts,json,vue}": [
+    "*.{js,ts,vue}": [
+      "prettier --write"
+    ],
+    "*.json": [
       "prettier --write"
     ]
   }
