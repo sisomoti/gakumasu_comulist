@@ -48,6 +48,10 @@ erDiagram
 
 **注意**: MermaidのER図では継承関係を直接表現できないため、以下の点を説明文で補足します：
 
+- `IdolCard`は`ProduceCard`と`SupportCard`の共通基底型として定義されています
+  - 共通属性（`id`, `name`, `rarity`）を定義しています
+  - `ProduceCard`と`SupportCard`は`IdolCard`を継承しています
+  - ER図では`ProduceCard`と`SupportCard`に直接属性を記載していますが、実際には`IdolCard`から継承された属性です
 - `Story`はすべてのストーリータイプの基底型（抽象エンティティ）として定義されています
 - `ProduceCardStory`と`SupportCardStory`は`Story`を継承しています
 - 実装では`StoryRepository.getAllStories()`や`findById()`などで`Story`型として統一して扱われます
@@ -71,14 +75,19 @@ erDiagram
 
 ### ProduceCard（プロデュース・カード）
 
-アイドルの様子を描いたカードの一種。1人のアイドルに紐づく。
+アイドルの様子を描いたカードの一種。1人のアイドルに紐づく。`IdolCard`を継承しています。
+
+**継承関係:**
+
+- `IdolCard`を継承している
+- 共通属性（`id`, `name`, `rarity`）は`IdolCard`から継承される
 
 **属性:**
 
-- `id: string` - カードのユニークID
-- `name: string` - カード名
+- `id: string` - カードのユニークID（`IdolCard`から継承）
+- `name: string` - カード名（`IdolCard`から継承）
+- `rarity: 'SSR' | 'SR' | 'R'` - レアリティ（`IdolCard`から継承）
 - `idolId: string` - 対象となるアイドルのID（必須、1:1）
-- `rarity: 'SSR' | 'SR' | 'R'` - レアリティ
 
 **リレーションシップ:**
 
@@ -102,15 +111,20 @@ erDiagram
 
 ### SupportCard（サポート・カード）
 
-アイドルの様子を描いたカードの一種。主のアイドルの他に、登場人物として他のアイドルも複数人出てくることがある。
+アイドルの様子を描いたカードの一種。主のアイドルの他に、登場人物として他のアイドルも複数人出てくることがある。`IdolCard`を継承しています。
+
+**継承関係:**
+
+- `IdolCard`を継承している
+- 共通属性（`id`, `name`, `rarity`）は`IdolCard`から継承される
 
 **属性:**
 
-- `id: string` - カードのユニークID
-- `name: string` - カード名
+- `id: string` - カードのユニークID（`IdolCard`から継承）
+- `name: string` - カード名（`IdolCard`から継承）
+- `rarity: 'SSR' | 'SR' | 'R'` - レアリティ（`IdolCard`から継承）
 - `mainIdolId: string` - 主となるアイドルのID（必須、1:1）
 - `appearingIdolIds: string[]` - 登場人物として登場するアイドルのIDリスト（0..\*）
-- `rarity: 'SSR' | 'SR' | 'R'` - レアリティ
 
 **リレーションシップ:**
 
@@ -132,6 +146,27 @@ erDiagram
   - キー: カードID（`supportCard.id`）
   - 値: 所持状態（`true` = 所持、`false` = 未所持）
 - **管理方法**: `useCardOwnership` composableを通じて所持状態を管理する
+
+### IdolCard（アイドルカード）
+
+`ProduceCard`と`SupportCard`の共通基底型。共通属性を定義しています。
+
+**役割:**
+
+- `ProduceCard`と`SupportCard`の共通基底型として機能
+- 共通属性（`id`, `name`, `rarity`）を定義
+- カードタイプに依存しない共通の操作を可能にする
+
+**属性:**
+
+- `id: string` - カードのユニークID
+- `name: string` - カード名
+- `rarity: 'SSR' | 'SR' | 'R'` - レアリティ
+
+**継承関係:**
+
+- `ProduceCard`と`SupportCard`が`IdolCard`を継承している
+- ER図では継承関係を直接表現できないため、各カードタイプに直接属性を記載している
 
 ### Story（ストーリー）
 
@@ -256,6 +291,32 @@ ProduceCardとSupportCardの実データは外部から取得する
 - **案2**: 手動でデータ入力
 
 データ構造設計時は、取得方法に依存しない設計とする（データ取得方法の変更に柔軟に対応できるようにする）。
+
+### 外部データソースの構造
+
+外部データソースは3つのJSONファイルに分割される：
+
+1. **`idols.json`**: アイドル情報
+   - 構造: `{ idols: Idol[] }`
+   - 各`Idol`は`id`と`name`を持つ
+
+2. **`produceCards.json`**: プロデュースカード情報
+   - 構造: `{ produceCards: ProduceCard[] }`
+   - 各`ProduceCard`は`id`, `name`, `idolId`, `rarity`を持つ
+
+3. **`supportCards.json`**: サポートカード情報
+   - 構造: `{ supportCards: SupportCard[] }`
+   - 各`SupportCard`は`id`, `name`, `mainIdolId`, `appearingIdolIds`, `rarity`を持つ
+
+### ストーリーの生成方針
+
+**重要な設計判断**: ストーリー（ProduceCardStory, SupportCardStory）は外部JSONファイルには含まれない。
+
+- **理由**: ストーリー数はレアリティとカードタイプから決定されるビジネスルールに基づいて計算可能なため、冗長性を避けるため
+- **実装**: DataSource実装（ManualDataSource, ScrapingDataSource）が内部的に`storyCountCalculator`を使用して、カードデータからストーリーを生成する
+- **ビジネスルール**:
+  - ProduceCard: SSR=3話、SR・R=0話
+  - SupportCard: SSR=3話、SR・R=2話
 
 ### データ取得層の設計
 
