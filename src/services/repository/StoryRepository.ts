@@ -3,24 +3,24 @@ import type {
   Story,
   ProduceCardStory,
   SupportCardStory,
-  StoriesData
+  ExternalGameData,
 } from '../../types/domain'
 
 /**
  * ストーリーリポジトリの実装
- * 
- * StoriesDataからストーリーを取得・検索するための実装。
+ *
+ * ExternalGameDataからストーリーを取得・検索するための実装。
  * SOLID原則のSingle Responsibility Principle (SRP) に準拠。
  * IStoryRepositoryインターフェースを実装して、Liskov Substitution Principle (LSP) に準拠。
  */
 export class StoryRepository implements IStoryRepository {
-  private readonly storiesData: StoriesData
+  private readonly storiesData: ExternalGameData
 
   /**
    * StoryRepositoryのコンストラクタ
-   * @param storiesData ストーリーデータ
+   * @param storiesData 外部ゲームデータ
    */
-  constructor(storiesData: StoriesData) {
+  constructor(storiesData: ExternalGameData) {
     this.storiesData = storiesData
   }
 
@@ -45,10 +45,7 @@ export class StoryRepository implements IStoryRepository {
    * @returns 全種類のストーリーの配列
    */
   getAllStories(): Story[] {
-    return [
-      ...this.storiesData.produceCardStories,
-      ...this.storiesData.supportCardStories
-    ]
+    return [...this.storiesData.produceCardStories, ...this.storiesData.supportCardStories]
   }
 
   /**
@@ -57,16 +54,12 @@ export class StoryRepository implements IStoryRepository {
    * @returns 見つかったストーリー。見つからない場合はundefined
    */
   findById(storyId: string): Story | undefined {
-    const produceStory = this.storiesData.produceCardStories.find(
-      story => story.id === storyId
-    )
+    const produceStory = this.storiesData.produceCardStories.find(story => story.id === storyId)
     if (produceStory) {
       return produceStory
     }
 
-    const supportStory = this.storiesData.supportCardStories.find(
-      story => story.id === storyId
-    )
+    const supportStory = this.storiesData.supportCardStories.find(story => story.id === storyId)
     return supportStory
   }
 
