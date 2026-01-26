@@ -42,10 +42,18 @@
 │  │  │ (Storage)                    │ │  │
 │  │  └─────────────────────────────┘ │  │
 │  └───────────────────────────────────┘  │
-│         ↑ JSONファイル読み込み           │
+│         ↑ JSONファイル読み込み（3ファイル）│
 │  ┌───────────────────────────────────┐  │
-│  │  data/stories.json                │  │
+│  │  external-data/                   │  │
+│  │  production/ (本番データ)         │  │
+│  │  - idols.json                     │  │
+│  │  - produceCards.json              │  │
+│  │  - supportCards.json              │  │
 │  │  (GitHub Actionsで自動更新)        │  │
+│  │  dummy/ (開発・テスト用)           │  │
+│  │  - idols.json                     │  │
+│  │  - produceCards.json              │  │
+│  │  - supportCards.json              │  │
 │  └───────────────────────────────────┘  │
 └─────────────────────────────────────────┘
          ↑ 自動更新
@@ -88,7 +96,22 @@
 
 ## データ構造
 
-### stories.json (GitHub Actionsで生成)
+### JSONファイルの分割方針
+
+保守性とスクレイピング時の都合を考慮し、関連性に基づいて3つのJSONファイルに分割する：
+
+1. **`idols.json`**: アイドル情報（独立）
+2. **`produceCards.json`**: ProduceCardのみ（ストーリーは含まない）
+3. **`supportCards.json`**: SupportCardのみ（ストーリーは含まない）
+
+この分割により：
+
+- スクレイピング時にプロデュースカードページとサポートカードページから取得するデータが、それぞれ1つのファイルに対応する
+- 関連するデータが同じファイルにまとまっているため、変更時の影響範囲が明確
+- フロントエンドで3つのファイルを並列で読み込み、`ExternalGameData`型に統合する
+- ストーリー（ProduceCardStory、SupportCardStory）は外部JSONファイルには含めず、DataSource実装（ManualDataSource、ScrapingDataSource）が内部的に`storyCountCalculator`を使用して生成する
+
+### JSONファイル構造（GitHub Actionsで生成）
 
 新設計に基づくデータ構造。詳細は`docs/data-model.md`を参照してください。
 
@@ -133,7 +156,30 @@ interface SupportCardStory {
   storyIndex: number // ストーリーのインデックス（1, 2, 3）
 }
 
-// 外部ゲームデータの構造
+// 分割されたJSONファイルの構造
+
+// idols.json
+interface IdolsData {
+  version: string
+  lastUpdated: string
+  idols: Idol[]
+}
+
+// produceCards.json
+interface ProduceCardsData {
+  version: string
+  lastUpdated: string
+  produceCards: ProduceCard[]
+}
+
+// supportCards.json
+interface SupportCardsData {
+  version: string
+  lastUpdated: string
+  supportCards: SupportCard[]
+}
+
+// 統合された外部ゲームデータの構造（フロントエンドで使用）
 interface ExternalGameData {
   version: string
   lastUpdated: string
@@ -239,8 +285,15 @@ gakumasu_comulist/
 │   ├── App.vue
 │   └── main.ts
 ├── public/
-│   └── data/
-│       └── stories.json                # スクレイピング結果（Git管理）
+│   └── external-data/
+│       ├── production/                 # 本番データ（スクレイピング結果、Git管理）
+│       │   ├── idols.json              # アイドル情報
+│       │   ├── produceCards.json       # プロデュースカード（ストーリーは含まない）
+│       │   └── supportCards.json       # サポートカード（ストーリーは含まない）
+│       └── dummy/                      # 開発・テスト用ダミーデータ
+│           ├── idols.json              # アイドル情報
+│           ├── produceCards.json       # プロデュースカード（ストーリーは含まない）
+│           └── supportCards.json        # サポートカード（ストーリーは含まない）
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -431,11 +484,26 @@ refactor: apply SOLID principles to storage service
 1. 両方のページからHTMLを取得
 2. テーブルからカード情報を抽出
 3. カード名、レアリティ、タイプを判定
-4. レアリティに応じてストーリー数を設定
-   - プロデュース: SSR=3話、SR・R=0話
-   - サポート: SSR=3話、SR・R=2話
-5. ストーリーIDを生成（cardId-story-1形式）
-6. JSONファイルを生成してコミット
+4. 分割されたJSONファイルを生成（`public/external-data/production/`配下）
+   - プロデュースカードページ → `produceCards.json`（ProduceCardのみ）
+   - サポートカードページ → `supportCards.json`（SupportCardのみ）
+   - アイドル情報 → `idols.json`（カードから抽出または別ソースから取得）
+5. JSONファイルをコミット
+
+### ストーリー生成ロジック（フロントエンド側）
+
+DataSource実装（ManualDataSource、ScrapingDataSource）が`fetchCards()`内でストーリーを生成する：
+
+1. JSONファイルからProduceCard/SupportCardを読み込んだ後
+2. 各カードのレアリティに基づいて`storyCountCalculator`を使用してストーリー数を計算
+   - ProduceCard: SSR=3話、SR・R=0話
+   - SupportCard: SSR=3話、SR・R=2話
+3. ストーリーIDを種別を先頭に含む形式で生成
+   - ProduceCardStory: `ProduceCard-{cardId}-story-{index}` 形式（例: `ProduceCard-produce-ssr-1-story-1`）
+   - SupportCardStory: `SupportCard-{cardId}-story-{index}` 形式（例: `SupportCard-support-ssr-1-story-1`）
+4. ストーリー配列を生成して`DataSourceResult`に含める
+
+この形式により、IDからストーリーの種類が判別でき、将来的にカード以外に紐づくストーリー（親愛度コミュ、育成シナリオなど）にも拡張可能。
 
 ## 設定ファイル
 
