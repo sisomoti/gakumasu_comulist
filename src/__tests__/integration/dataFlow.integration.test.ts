@@ -47,7 +47,9 @@ describe('統合テスト: データフロー', () => {
         { id: 'produce-ssr-1', name: '春香 SSR', idolId: 'idol-1', rarity: 'SSR' },
         { id: 'produce-ssr-2', name: '千早 SSR', idolId: 'idol-2', rarity: 'SSR' },
         { id: 'produce-sr-1', name: '美希 SR', idolId: 'idol-3', rarity: 'SR' },
+        { id: 'produce-sr-2', name: '雪歩 SR', idolId: 'idol-5', rarity: 'SR' },
         { id: 'produce-r-1', name: 'やよい R', idolId: 'idol-4', rarity: 'R' },
+        { id: 'produce-r-2', name: '春香 R', idolId: 'idol-1', rarity: 'R' },
       ],
     }
 
@@ -77,9 +79,23 @@ describe('統合テスト: データフロー', () => {
           rarity: 'SR',
         },
         {
+          id: 'support-sr-2',
+          name: '千早 SR',
+          mainIdolId: 'idol-2',
+          appearingIdolIds: [],
+          rarity: 'SR',
+        },
+        {
           id: 'support-r-1',
           name: 'やよい R',
           mainIdolId: 'idol-4',
+          appearingIdolIds: [],
+          rarity: 'R',
+        },
+        {
+          id: 'support-r-2',
+          name: '美希 R',
+          mainIdolId: 'idol-3',
           appearingIdolIds: [],
           rarity: 'R',
         },
@@ -153,7 +169,7 @@ describe('統合テスト: データフロー', () => {
       )
     })
 
-    it('ストーリーが正しく生成されている（SSRカードは3ストーリー、SRは2ストーリー、Rは1ストーリー）', () => {
+    it('ストーリーが正しく生成されている（ProduceCard: SSR=3話、SR・R=0話、SupportCard: SSR=3話、SR・R=2話）', () => {
       const { produceCardStories, supportCardStories } = useStories(
         repository,
         gameData,
@@ -181,11 +197,11 @@ describe('統合テスト: データフロー', () => {
       const srProduceCards = gameData.produceCards.filter(card => card.rarity === 'SR')
       const srSupportCards = gameData.supportCards.filter(card => card.rarity === 'SR')
 
-      // SRプロデュースカードは各2ストーリー
+      // SRプロデュースカードは各0ストーリー
       const srProduceStories = produceCardStories.value.filter(story =>
         srProduceCards.some(card => card.id === story.produceCardId)
       )
-      expect(srProduceStories.length).toBe(srProduceCards.length * 2)
+      expect(srProduceStories.length).toBe(srProduceCards.length * 0)
 
       // SRサポートカードは各2ストーリー
       const srSupportStories = supportCardStories.value.filter(story =>
@@ -197,17 +213,17 @@ describe('統合テスト: データフロー', () => {
       const rProduceCards = gameData.produceCards.filter(card => card.rarity === 'R')
       const rSupportCards = gameData.supportCards.filter(card => card.rarity === 'R')
 
-      // Rプロデュースカードは各1ストーリー
+      // Rプロデュースカードは各0ストーリー
       const rProduceStories = produceCardStories.value.filter(story =>
         rProduceCards.some(card => card.id === story.produceCardId)
       )
-      expect(rProduceStories.length).toBe(rProduceCards.length * 1)
+      expect(rProduceStories.length).toBe(rProduceCards.length * 0)
 
-      // Rサポートカードは各1ストーリー
+      // Rサポートカードは各2ストーリー
       const rSupportStories = supportCardStories.value.filter(story =>
         rSupportCards.some(card => card.id === story.supportCardId)
       )
-      expect(rSupportStories.length).toBe(rSupportCards.length * 1)
+      expect(rSupportStories.length).toBe(rSupportCards.length * 2)
     })
 
     it('リポジトリのfindByIdメソッドが正しく動作する', () => {
