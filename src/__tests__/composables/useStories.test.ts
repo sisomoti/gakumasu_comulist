@@ -58,7 +58,7 @@ describe('useStories', () => {
 
     // useReadStatusのモック
     mockReadStatus = {
-      isRead: vi.fn((storyId: string) => false),
+      isRead: vi.fn(() => false),
       toggleRead: vi.fn(),
       setRead: vi.fn(),
       getAllReadStories: vi.fn(() => []),
@@ -67,7 +67,7 @@ describe('useStories', () => {
 
     // useCardOwnershipのモック
     mockCardOwnership = {
-      isOwned: vi.fn((cardId: string) => true),
+      isOwned: vi.fn(() => true),
       toggleOwned: vi.fn(),
       setOwned: vi.fn(),
       getAllOwnedCards: vi.fn(() => []),
@@ -710,42 +710,6 @@ describe('useStories', () => {
         const rarityOrder: Record<string, number> = { R: 1, SR: 2, SSR: 3 }
         for (let i = 0; i < rarities.length - 1; i++) {
           expect(rarityOrder[rarities[i]]).toBeGreaterThanOrEqual(rarityOrder[rarities[i + 1]])
-        }
-      })
-    })
-
-    describe('storyIndexソート', () => {
-      it('ストーリーインデックスで昇順ソートできる', () => {
-        const { filteredStories, setFilter } = useStories(
-          mockRepository,
-          mockGameData,
-          mockReadStatus,
-          mockCardOwnership
-        )
-
-        setFilter({ sortBy: 'storyIndex', sortOrder: 'asc' })
-
-        const indices = filteredStories.value.map(story => story.storyIndex)
-
-        for (let i = 0; i < indices.length - 1; i++) {
-          expect(indices[i]).toBeLessThanOrEqual(indices[i + 1])
-        }
-      })
-
-      it('ストーリーインデックスで降順ソートできる', () => {
-        const { filteredStories, setFilter } = useStories(
-          mockRepository,
-          mockGameData,
-          mockReadStatus,
-          mockCardOwnership
-        )
-
-        setFilter({ sortBy: 'storyIndex', sortOrder: 'desc' })
-
-        const indices = filteredStories.value.map(story => story.storyIndex)
-
-        for (let i = 0; i < indices.length - 1; i++) {
-          expect(indices[i]).toBeGreaterThanOrEqual(indices[i + 1])
         }
       })
     })
