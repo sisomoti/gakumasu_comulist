@@ -10,7 +10,14 @@
     "dev": "vite --config config/vite.config.ts",
     "build": "vue-tsc && vite build --config config/vite.config.ts",
     "preview": "vite preview --config config/vite.config.ts",
-    "test": "vitest --config config/vitest.config.ts"
+    "test": "vitest --config config/vitest.config.ts",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\" \"#dist\"",
+    "format:md": "prettier --write \"**/*.md\" \"!node_modules/**\" \"!dist/**\"",
+    "format": "prettier --write \"**/*.{js,ts,json,vue,md}\" \"!node_modules/**\" \"!dist/**\"",
+    "lint": "npm run lint:md",
+    "lint:fix": "npm run lint:md:fix && npm run format:md",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -25,6 +32,10 @@
     "@vitest/ui": "^4.0.17",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.3.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "markdownlint-cli2": "^0.20.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.17",
@@ -36,5 +47,14 @@
   "homepage": "https://github.com/sisomoti/gakumasu_comulist#readme",
   "dependencies": {
     "vue": "^3.5.26"
+  },
+  "lint-staged": {
+    "*.md": [
+      "markdownlint-cli2 --fix",
+      "prettier --write"
+    ],
+    "*.{js,ts,json,vue}": [
+      "prettier --write"
+    ]
   }
 }
