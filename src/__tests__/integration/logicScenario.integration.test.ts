@@ -6,6 +6,7 @@ import { useReadStatus } from '../../composables/useReadStatus'
 import { useCardOwnership } from '../../composables/useCardOwnership'
 import { LocalStorageService } from '../../services/storage/LocalStorageService'
 import type { ExternalGameData } from '../../types/domain'
+import { getCardIdFromStory } from '../../types/domain'
 
 // fetchをモック化
 ;(globalThis as any).fetch = vi.fn()
@@ -168,8 +169,7 @@ describe('統合テスト: ロジック層シナリオ', () => {
 
         filtered.forEach(story => {
           // 所持カードのストーリーであることを確認
-          const cardId =
-            'produceCardId' in story ? (story as any).produceCardId : (story as any).supportCardId
+          const cardId = getCardIdFromStory(story)
           expect(cardOwnership.isOwned(cardId)).toBe(true)
 
           // 未読であることを確認
@@ -398,8 +398,7 @@ describe('統合テスト: ロジック層シナリオ', () => {
       // 初期状態でデータを設定
       if (stories.allStories.value.length > 0) {
         const story = stories.allStories.value[0]
-        const cardId =
-          'produceCardId' in story ? (story as any).produceCardId : (story as any).supportCardId
+        const cardId = getCardIdFromStory(story)
 
         readStatus.setRead(story.id, true)
         cardOwnership.setOwned(cardId, true)

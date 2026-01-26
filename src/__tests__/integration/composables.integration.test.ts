@@ -6,6 +6,7 @@ import { useReadStatus } from '../../composables/useReadStatus'
 import { useCardOwnership } from '../../composables/useCardOwnership'
 import { LocalStorageService } from '../../services/storage/LocalStorageService'
 import type { ExternalGameData } from '../../types/domain'
+import { getCardIdFromStory } from '../../types/domain'
 
 // fetchをモック化
 ;(globalThis as any).fetch = vi.fn()
@@ -190,8 +191,7 @@ describe('統合テスト: Composables連携', () => {
 
       // 一部のカードを所持状態にする
       const firstStory = allStories[0]
-      const cardId =
-        'produceCardId' in firstStory ? firstStory.produceCardId : firstStory.supportCardId
+      const cardId = getCardIdFromStory(firstStory)
 
       cardOwnership.setOwned(cardId, true)
 
@@ -202,7 +202,7 @@ describe('統合テスト: Composables連携', () => {
       const filtered = filteredStories.value
       expect(filtered.length).toBeGreaterThan(0)
       filtered.forEach(story => {
-        const storyCardId = 'produceCardId' in story ? story.produceCardId : story.supportCardId
+        const storyCardId = getCardIdFromStory(story)
         expect(cardOwnership.isOwned(storyCardId)).toBe(true)
       })
     })
@@ -217,8 +217,7 @@ describe('統合テスト: Composables連携', () => {
       // カードを所持状態にする
       if (stories.allStories.value.length > 0) {
         const firstStory = stories.allStories.value[0]
-        const cardId =
-          'produceCardId' in firstStory ? firstStory.produceCardId : firstStory.supportCardId
+        const cardId = getCardIdFromStory(firstStory)
 
         cardOwnership.setOwned(cardId, true)
 
@@ -238,10 +237,8 @@ describe('統合テスト: Composables連携', () => {
         const firstStory = allStories[0]
         const secondStory = allStories[1]
 
-        const firstCardId =
-          'produceCardId' in firstStory ? firstStory.produceCardId : firstStory.supportCardId
-        const secondCardId =
-          'produceCardId' in secondStory ? secondStory.produceCardId : secondStory.supportCardId
+        const firstCardId = getCardIdFromStory(firstStory)
+        const secondCardId = getCardIdFromStory(secondStory)
 
         cardOwnership.setOwned(firstCardId, true)
         cardOwnership.setOwned(secondCardId, true)
@@ -259,7 +256,7 @@ describe('統合テスト: Composables連携', () => {
           expect(readStatus.isRead(story.id)).toBe(false)
 
           // 所持カードであることを確認
-          const storyCardId = 'produceCardId' in story ? story.produceCardId : story.supportCardId
+          const storyCardId = getCardIdFromStory(story)
           expect(cardOwnership.isOwned(storyCardId)).toBe(true)
         })
       }
@@ -327,7 +324,7 @@ describe('統合テスト: Composables連携', () => {
       // 新しいカードを所持状態にする
       if (stories.allStories.value.length > 0) {
         const story = stories.allStories.value[0]
-        const cardId = 'produceCardId' in story ? story.produceCardId : story.supportCardId
+        const cardId = getCardIdFromStory(story)
 
         if (!cardOwnership.isOwned(cardId)) {
           cardOwnership.setOwned(cardId, true)

@@ -7,6 +7,7 @@ import type {
   SupportCardStory,
   Rarity,
 } from '../types/domain'
+import { getCardIdFromStory } from '../types/domain'
 import type { useReadStatus } from './useReadStatus'
 import type { useCardOwnership } from './useCardOwnership'
 
@@ -199,14 +200,8 @@ export function useStories(
           }
           case 'cardId': {
             // カードID（登場順）でソート
-            const cardIdA =
-              'produceCardId' in a
-                ? (a as ProduceCardStory).produceCardId
-                : (a as SupportCardStory).supportCardId
-            const cardIdB =
-              'produceCardId' in b
-                ? (b as ProduceCardStory).produceCardId
-                : (b as SupportCardStory).supportCardId
+            const cardIdA = getCardIdFromStory(a)
+            const cardIdB = getCardIdFromStory(b)
             compareResult = cardIdA.localeCompare(cardIdB, 'ja')
             break
           }
