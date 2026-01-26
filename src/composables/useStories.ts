@@ -24,6 +24,12 @@ export interface StoryFilter {
   ownedOnly?: boolean
   /** 特定のアイドルのストーリーのみ */
   idolIds?: string[]
+  /** 検索クエリ（カード名またはアイドル名で部分一致検索） */
+  searchQuery?: string
+  /** ソートキー */
+  sortBy?: 'name' | 'rarity' | 'storyIndex'
+  /** ソート順 */
+  sortOrder?: 'asc' | 'desc'
 }
 
 /**
@@ -123,6 +129,82 @@ export function useStories(
           )
         }
         return false
+      })
+    }
+
+    // 検索クエリでフィルタ（カード名またはアイドル名で部分一致）
+    if (filter.value.searchQuery && filter.value.searchQuery.trim() !== '') {
+      const query = filter.value.searchQuery.trim().toLowerCase()
+      stories = stories.filter(story => {
+        const card = getCardFromStory(story)
+        if (!card) return false
+
+        // カード名で検索
+        if (card.name.toLowerCase().includes(query)) {
+          return true
+        }
+
+        // アイドル名で検索
+        if ('idolId' in card) {
+          // ProduceCard
+          const idol = gameData.idols.find(i => i.id === card.idolId)
+          if (idol && idol.name.toLowerCase().includes(query)) {
+            return true
+          }
+        } else if ('mainIdolId' in card) {
+          // SupportCard
+          const mainIdol = gameData.idols.find(i => i.id === card.mainIdolId)
+          if (mainIdol && mainIdol.name.toLowerCase().includes(query)) {
+            return true
+          }
+          // 登場人物のアイドル名でも検索
+          const appearingIdols = card.appearingIdolIds
+            .map(id => gameData.idols.find(i => i.id === id))
+            .filter((idol): idol is NonNullable<typeof idol> => idol !== undefined)
+          if (appearingIdols.some(idol => idol.name.toLowerCase().includes(query))) {
+            return true
+          }
+        }
+
+        return false
+      })
+    }
+
+    // ソート
+    if (filter.value.sortBy) {
+      const sortOrder = filter.value.sortOrder || 'asc'
+      stories = [...stories].sort((a, b) => {
+        const cardA = getCardFromStory(a)
+        const cardB = getCardFromStory(b)
+
+        if (!cardA || !cardB) return 0
+
+        let compareResult = 0
+
+        switch (filter.value.sortBy) {
+          case 'name':
+            compareResult = cardA.name.localeCompare(cardB.name, 'ja')
+            break
+          case 'rarity': {
+            const rarityOrder: Record<Rarity, number> = { SSR: 3, SR: 2, R: 1 }
+            compareResult = rarityOrder[cardA.rarity] - rarityOrder[cardB.rarity]
+            break
+          }
+          case 'storyIndex': {
+            const indexA =
+              'produceCardId' in a
+                ? (a as ProduceCardStory).storyIndex
+                : (a as SupportCardStory).storyIndex
+            const indexB =
+              'produceCardId' in b
+                ? (b as ProduceCardStory).storyIndex
+                : (b as SupportCardStory).storyIndex
+            compareResult = indexA - indexB
+            break
+          }
+        }
+
+        return sortOrder === 'asc' ? compareResult : -compareResult
       })
     }
 
