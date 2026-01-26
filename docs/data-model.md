@@ -9,36 +9,36 @@ erDiagram
     Idol }o--o{ SupportCard : "appears_in"
     ProduceCard ||--o| ProduceCardStory : "has"
     SupportCard ||--o| SupportCardStory : "has"
-    
+
     Idol {
         string id
         string name
     }
-    
+
     ProduceCard {
         string id
         string name
         string idolId
         enum rarity
     }
-    
+
     SupportCard {
         string id
         string name
         string mainIdolId
         enum rarity
     }
-    
+
     Story {
         string id
     }
-    
+
     ProduceCardStory {
         string id
         string produceCardId
         number storyIndex
     }
-    
+
     SupportCardStory {
         string id
         string supportCardId
@@ -47,6 +47,7 @@ erDiagram
 ```
 
 **注意**: MermaidのER図では継承関係を直接表現できないため、以下の点を説明文で補足します：
+
 - `Story`はすべてのストーリータイプの基底型（抽象エンティティ）として定義されています
 - `ProduceCardStory`と`SupportCardStory`は`Story`を継承しています
 - 実装では`StoryRepository.getAllStories()`や`findById()`などで`Story`型として統一して扱われます
@@ -58,25 +59,29 @@ erDiagram
 ゲーム内に登場するキャラクター。
 
 **属性:**
+
 - `id: string` - アイドルのユニークID
 - `name: string` - アイドルの名前
 
 **リレーションシップ:**
-- 1人のIdolは複数のProduceCardを持つことができる (1:0..*)
-- 1人のIdolは複数のSupportCardの主アイドルになることができる (1:0..*)
-- 1人のIdolは複数のSupportCardに登場人物として登場することができる (1:0..*)
+
+- 1人のIdolは複数のProduceCardを持つことができる (1:0..\*)
+- 1人のIdolは複数のSupportCardの主アイドルになることができる (1:0..\*)
+- 1人のIdolは複数のSupportCardに登場人物として登場することができる (1:0..\*)
 
 ### ProduceCard（プロデュース・カード）
 
 アイドルの様子を描いたカードの一種。1人のアイドルに紐づく。
 
 **属性:**
+
 - `id: string` - カードのユニークID
 - `name: string` - カード名
 - `idolId: string` - 対象となるアイドルのID（必須、1:1）
 - `rarity: 'SSR' | 'SR' | 'R'` - レアリティ
 
 **リレーションシップ:**
+
 - 1枚のProduceCardは1人のIdolに紐づく (1:1)
 - 1枚のProduceCardは0〜3個のProduceCardStoryを持つ (1:0..3)
   - SSR: 3個
@@ -84,8 +89,9 @@ erDiagram
   - R: 0個
 
 **所持状態の管理:**
+
 - **設計方針**: ProduceCard型の内部には所持状態のフィールドを持たない（分離型設計）
-- **理由**: 
+- **理由**:
   - 外部データ（`StoriesData`）とユーザー固有の状態（所持/未所持）を分離するため
   - 外部データの更新時にユーザーの所持状態を独立して保持できるため
   - ドメインモデル（ProduceCard）とアプリケーション状態（所持状態）の責務を分離するため
@@ -99,23 +105,26 @@ erDiagram
 アイドルの様子を描いたカードの一種。主のアイドルの他に、登場人物として他のアイドルも複数人出てくることがある。
 
 **属性:**
+
 - `id: string` - カードのユニークID
 - `name: string` - カード名
 - `mainIdolId: string` - 主となるアイドルのID（必須、1:1）
-- `appearingIdolIds: string[]` - 登場人物として登場するアイドルのIDリスト（0..*）
+- `appearingIdolIds: string[]` - 登場人物として登場するアイドルのIDリスト（0..\*）
 - `rarity: 'SSR' | 'SR' | 'R'` - レアリティ
 
 **リレーションシップ:**
+
 - 1枚のSupportCardは1人のIdolを主アイドルとして持つ (1:1)
-- 1枚のSupportCardは0人以上のIdolに登場人物として登場する (1:0..*)
+- 1枚のSupportCardは0人以上のIdolに登場人物として登場する (1:0..\*)
 - 1枚のSupportCardは2〜3個のSupportCardStoryを持つ (1:2..3)
   - SSR: 3個
   - SR: 2個
   - R: 2個
 
 **所持状態の管理:**
+
 - **設計方針**: SupportCard型の内部には所持状態のフィールドを持たない（分離型設計）
-- **理由**: 
+- **理由**:
   - 外部データ（`StoriesData`）とユーザー固有の状態（所持/未所持）を分離するため
   - 外部データの更新時にユーザーの所持状態を独立して保持できるため
   - ドメインモデル（SupportCard）とアプリケーション状態（所持状態）の責務を分離するため
@@ -129,15 +138,18 @@ erDiagram
 すべてのストーリータイプの基底型。将来の拡張用（親愛度コミュ、育成シナリオ、初星コミュ、イベントコミュなど）に対応するための抽象エンティティ。
 
 **属性:**
+
 - `id: string` - ストーリーのユニークID
 
 **継承関係:**
+
 - `ProduceCardStory`と`SupportCardStory`が`Story`を継承しています
 - 実装では`StoryRepository.getAllStories()`や`findById()`などで`Story`型として統一して扱われます
 
 **読了状態の管理:**
+
 - **設計方針**: Story型の内部には読了/未読状態のフィールドを持たない（分離型設計）
-- **理由**: 
+- **理由**:
   - 外部データ（`StoriesData`）とユーザー固有の状態（読了/未読）を分離するため
   - 外部データの更新時にユーザーの読了状態を独立して保持できるため
   - ドメインモデル（Story）とアプリケーション状態（読了状態）の責務を分離するため
@@ -151,11 +163,13 @@ erDiagram
 ProduceCardに紐づくストーリー。`Story`を継承しています。
 
 **属性:**
+
 - `id: string` - ストーリーのユニークID（`Story`から継承）
 - `produceCardId: string` - 紐づくProduceCardのID
 - `storyIndex: number` - ストーリーのインデックス（1, 2, 3）
 
 **リレーションシップ:**
+
 - 1個のProduceCardStoryは1枚のProduceCardに紐づく (多:1)
 
 ### SupportCardStory（サポート・カード・ストーリー）
@@ -163,29 +177,31 @@ ProduceCardに紐づくストーリー。`Story`を継承しています。
 SupportCardに紐づくストーリー。`Story`を継承しています。
 
 **属性:**
+
 - `id: string` - ストーリーのユニークID（`Story`から継承）
 - `supportCardId: string` - 紐づくSupportCardのID
 - `storyIndex: number` - ストーリーのインデックス（1, 2, 3）
 
 **リレーションシップ:**
+
 - 1個のSupportCardStoryは1枚のSupportCardに紐づく (多:1)
 
 ## リレーションシップの詳細
 
 ### Idol と ProduceCard の関係
 
-- **関係性**: 1対多（1:0..*）
+- **関係性**: 1対多（1:0..\*）
 - **説明**: 1人のIdolは複数のProduceCardを持つことができる。1枚のProduceCardは必ず1人のIdolに紐づく。
 - **実装**: ProduceCardに`idolId`属性を持たせる
 
 ### Idol と SupportCard の関係
 
-- **主アイドルとの関係**: 1対多（1:0..*）
+- **主アイドルとの関係**: 1対多（1:0..\*）
   - 1人のIdolは複数のSupportCardの主アイドルになることができる
   - 1枚のSupportCardは必ず1人のIdolを主アイドルとして持つ
   - 実装: SupportCardに`mainIdolId`属性を持たせる
 
-- **登場人物との関係**: 多対多（1:0..*）
+- **登場人物との関係**: 多対多（1:0..\*）
   - 1人のIdolは複数のSupportCardに登場人物として登場することができる
   - 1枚のSupportCardは0人以上のIdolに登場人物として登場する
   - 実装: SupportCardに`appearingIdolIds`配列属性を持たせる
@@ -232,9 +248,10 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
 
 ### ProduceCardとSupportCardの実データ
 
-**ProduceCardとSupportCardの実データは外部から取得する**
+ProduceCardとSupportCardの実データは外部から取得する
 
 **取得方法は未定**（以下のいずれかを採用予定）:
+
 - **案1**: 外部Webサイトからのスクレイピング
 - **案2**: 手動でデータ入力
 
@@ -248,7 +265,7 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
 
 ### レイヤー構成
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ Presentation Layer (Components)      │ 既存: src/components/
 └─────────────────────────────────────┘
@@ -313,11 +330,11 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
   - `useStories.ts`: ストーリーデータの管理（取得、フィルタリング、検索など）
   - `useReadStatus.ts`: 読了状態の管理（読み取り、更新、切り替えなど）
   - `useLocalStorage.ts`: ローカルストレージへの保存・読み込みの管理
-- **依存関係**: 
+- **依存関係**:
   - Domain Model Layer に依存（エンティティの型定義）
   - Domain Service Layer に依存（ビジネスルールの利用）
   - Data Access Layer に依存（データの永続化）
-- **SOLID原則**: 
+- **SOLID原則**:
   - Single Responsibility Principle (SRP) - 各composableは特定の機能領域のみを担当
   - Dependency Inversion Principle (DIP) - インターフェースに依存
 - **状態**: **既存** - 既存のまま拡張
@@ -344,7 +361,7 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
   - `story.ts`: Story, ProduceCardStory, SupportCardStory の型定義
   - `index.ts`: エンティティのエクスポート
 - **依存関係**: なし（最下層のドメインモデル）
-- **SOLID原則**: 
+- **SOLID原則**:
   - Single Responsibility Principle (SRP) - 各エンティティは単一の概念を表現
   - Open/Closed Principle (OCP) - 拡張可能な設計（将来のストーリータイプ追加に対応）
 - **状態**: **新規** - 新規作成
@@ -361,10 +378,10 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
     - 外部WebサイトからHTMLを取得し、カード情報を抽出
   - `ManualDataSource.ts`: 手動入力実装（案2）
     - ユーザーが手動で入力したデータを取得
-- **依存関係**: 
+- **依存関係**:
   - Domain Model Layer に依存（エンティティの型定義）
   - Infrastructure Layer に依存（HTTPリクエストなど、必要に応じて）
-- **SOLID原則**: 
+- **SOLID原則**:
   - Dependency Inversion Principle (DIP) - インターフェースに依存し、実装は注入可能
   - Liskov Substitution Principle (LSP) - インターフェースの実装は置き換え可能
   - Open/Closed Principle (OCP) - 新しいデータ取得方法を追加しても既存コードを変更しない
@@ -381,10 +398,10 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
     - `saveStories()`: ストーリーの保存
   - `StoryRepository.ts`: ストーリーリポジトリの実装（既存）
     - ローカルストレージサービスを使用してデータの永続化
-- **依存関係**: 
+- **依存関係**:
   - Domain Model Layer に依存（エンティティの型定義）
   - Infrastructure Layer に依存（ストレージサービスの利用）
-- **SOLID原則**: 
+- **SOLID原則**:
   - Single Responsibility Principle (SRP) - データアクセスのみを担当
   - Dependency Inversion Principle (DIP) - インターフェースに依存
   - Liskov Substitution Principle (LSP) - インターフェースの実装は置き換え可能
@@ -410,7 +427,7 @@ SupportCardに紐づくストーリー。`Story`を継承しています。
       - `importFromCsv()`: CSV形式からのインポート
     - `ExportService.ts`: エクスポートサービスの実装（既存）
 - **依存関係**: なし（最下層のインフラストラクチャ）
-- **SOLID原則**: 
+- **SOLID原則**:
   - Single Responsibility Principle (SRP) - 各サービスは単一の責任のみを持つ
   - Dependency Inversion Principle (DIP) - インターフェースに依存
   - Liskov Substitution Principle (LSP) - インターフェースの実装は置き換え可能
