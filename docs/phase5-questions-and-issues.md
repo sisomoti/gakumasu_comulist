@@ -1,6 +1,6 @@
 # Phase5 計画書の疑問点と修正要望
 
-このドキュメントは、Phase5 UI実装計画（`c:\Users\siso\.cursor\plans\phase5_ui実装計画_22be29cf.plan.md`）に対する疑問点と修正要望を記録したものです。
+このドキュメントは、Phase5 UI実装計画（`docs/phase5-implementation-plan.md`）に対する疑問点と修正要望を記録したものです。
 後続のAgentが確認・対応できるよう、具体的な内容を記載しています。
 
 ## 記録日
@@ -9,7 +9,7 @@
 
 ## 対象計画ファイル
 
-- `c:\Users\siso\.cursor\plans\phase5_ui実装計画_22be29cf.plan.md`
+- `docs/phase5-implementation-plan.md`
 
 ## バックログ管理に関する疑問点
 
