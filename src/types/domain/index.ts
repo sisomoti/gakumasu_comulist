@@ -27,4 +27,8 @@ export {
 } from './typeGuards'
 
 // ユーティリティ関数をエクスポート
-export { getCardIdFromStory } from '../../utils/domain/storyUtils'
+export {
+  getCardIdFromStory,
+  getMainIdolIdFromStory,
+  getAppearingIdolIdsFromStory,
+} from '../../utils/domain/storyUtils'

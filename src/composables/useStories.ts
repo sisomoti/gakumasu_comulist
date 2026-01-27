@@ -7,7 +7,11 @@ import type {
   SupportCardStory,
   Rarity,
 } from '../types/domain'
-import { getCardIdFromStory } from '../types/domain'
+import {
+  getCardIdFromStory,
+  getMainIdolIdFromStory,
+  getAppearingIdolIdsFromStory,
+} from '../types/domain'
 import type { useReadStatus } from './useReadStatus'
 import type { useCardOwnership } from './useCardOwnership'
 
@@ -116,20 +120,8 @@ export function useStories(
     // アイドルIDでフィルタ
     if (filter.value.idolIds && filter.value.idolIds.length > 0) {
       stories = stories.filter(story => {
-        const card = getCardFromStory(story)
-        if (!card) return false
-
-        if ('idolId' in card) {
-          // ProduceCard
-          return filter.value.idolIds!.includes(card.idolId)
-        } else if ('mainIdolId' in card) {
-          // SupportCard
-          return (
-            filter.value.idolIds!.includes(card.mainIdolId) ||
-            card.appearingIdolIds.some(id => filter.value.idolIds!.includes(id))
-          )
-        }
-        return false
+        const appearingIdolIds = getAppearingIdolIdsFromStory(story, gameData)
+        return appearingIdolIds.some(id => filter.value.idolIds!.includes(id))
       })
     }
 
@@ -193,8 +185,8 @@ export function useStories(
           }
           case 'idolId': {
             // ProduceCardの場合はidolId、SupportCardの場合はmainIdolIdでソート
-            const idolIdA = 'idolId' in cardA ? cardA.idolId : cardA.mainIdolId
-            const idolIdB = 'idolId' in cardB ? cardB.idolId : cardB.mainIdolId
+            const idolIdA = getMainIdolIdFromStory(a, gameData) || ''
+            const idolIdB = getMainIdolIdFromStory(b, gameData) || ''
             compareResult = idolIdA.localeCompare(idolIdB, 'ja')
             break
           }
