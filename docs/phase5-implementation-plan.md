@@ -143,17 +143,22 @@ todos:
 - [ ] `src/types/domain/backlog.ts` を作成
   - `BacklogRank`: バックログのランク（数値）
   - `BacklogItem`: バックログアイテムの型。管理単位は拡張可能とする（参照ID＋種別を考慮した定義。Phase5ではストーリーのみ利用）
-  - `BacklogFilter`: フィルター条件の型
+  - `BacklogFilter`: フィルター条件の型（表示の絞り込み専用。実装時確認: 既存の
+    `StoryFilter`（`useStories`）と揃えるか、バックログ用に必要な項目だけ定義するか。
+    候補: cardType, rarity, unreadOnly, idolIds, searchQuery など）
 - [ ] `src/types/domain/index.ts` を更新してエクスポート
 
 #### 5.1.2: ローカルストレージ構造の定義
 
 - [ ] `src/types/storage.ts` を作成
-  - `SprintStorage`: スプリント情報のストレージ構造
-  - `BacklogStorage`: バックログ情報のストレージ構造
-  - `KanbanStorage`: カンバン情報のストレージ構造
+  - `SprintStorage`: スプリント情報のストレージ構造（実装時確認: 「1つのアクティブな
+    スプリントのみ」のため `{ activeSprint: Sprint | null }` を想定。履歴が必要なら別途検討）
+  - `BacklogStorage`: バックログ情報のストレージ構造（本文「データ構造の詳細」を参照）
+  - `KanbanStorage`: カンバン情報のストレージ構造（本文「データ構造の詳細」を参照）。列の表示ON/OFF設定をここに含めるか、別キーにするかは実装時確認
   - `ReadingPlanStorage`: スプリント・バックログ・カンバンの各ストレージをまとめる
-    ルート構造（`SprintStorage`, `BacklogStorage`, `KanbanStorage` を保持）
+    ルート構造（型定義用）。**保存キー方針は実装時確認**: 既存はキー別
+    （`readStatus`, `cardOwnership` 等）のため、`sprint` / `backlog` / `kanban` の3キーで
+    保存するか、1キー `readingPlan` にまとめるか選択する
 
 **コミットポイント**: 型定義とストレージ構造の定義が完了した時点
 
@@ -239,7 +244,9 @@ todos:
 - [ ] 「ここまで」の設定（日数設定、区切り線表示）
 - [ ] ランク付け機能（ドラッグ&ドロップ）。編集モード内で実施
 - [ ] 未計画への移動機能（ドラッグ&ドロップ）
-- [ ] 自動ルール適用（おすすめ順）: Phase5では1種類のみ。未設定時は適用しない。設定UI配置は要検討
+- [ ] 自動ルール適用（おすすめ順）: Phase5では1種類のみ実装。未設定時は適用しない。
+      （実装時確認: その1種類を「アイドル順」と「レアリティ順」のどちらにするか選択。
+      設定UI配置は Phase5 ではスコープ外とするか要検討）
 
 **コミットポイント**: バックログ画面の主要機能が完了した時点
 
@@ -362,20 +369,81 @@ interface KanbanStorage {
 }
 ```
 
+## 実装時確認する点（別チャットで実装する際のチェックリスト）
+
+実装着手前に以下を決めておくと、一貫した実装がしやすい。不明点は本計画書の
+「確定した設計方針」「データ構造の詳細」を優先し、既存コード
+（`useStories`, `useReadStatus`, `useLocalStorage`）のパターンに合わせる。
+
+### 5.1 データ構造
+
+| 確認項目                 | 内容・候補                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------- |
+| **BacklogFilter の型**   | 表示の絞り込み専用。既存                                                                    |
+|                          | `StoryFilter`（`src/composables/useStories.ts`）を参考に、                                  |
+|                          | cardType / rarity / unreadOnly / idolIds / searchQuery 等のうちバックログで必要な項目を     |
+|                          | 定義する。`StoryFilter` の部分型にするか、別型で同じ構造にするか選択。                      |
+| **SprintStorage の形**   | 「1つのアクティブなスプリントのみ」のため                                                   |
+|                          | `{ activeSprint: Sprint または null }` を想定。履歴表示が必要なら別キーや配列を後から検討。 |
+| **ストレージのキー方針** | 案A: `sprint`, `backlog`, `kanban` の3キーで保存（既存の                                    |
+|                          | readStatus / cardOwnership と同様）。案B: 1キー `readingPlan` に                            |
+|                          | `ReadingPlanStorage` を丸ごと保存。読み書きの単位・マイグレーションのしやすさで選択。       |
+| **列の表示ON/OFF**       | カンバン列の折りたたみ設定を `KanbanStorage` に含めるか、                                   |
+|                          | 別キー（例: `kanbanColumnVisibility`）にするか。                                            |
+
+### 5.2〜5.4 Composables
+
+- **未読ストーリーの取得**: バックログ・カンバンの対象は「未読ストーリー」。`useStories` の
+  filteredStories（unreadOnly 等）と `useReadStatus` を組み合わせて未読一覧を取得する。
+- **スプリント終了時**: 「終了」= アクティブスプリントの `isActive` を false にする処理でよいか。
+  次スプリント開始時に上書きする想定か確認。
+- **マージ時の重複**: スプリントへストーリーを追加（マージ）するとき、既に含まれる storyId は
+  重複排除する。
+- **「ここまで」の表現**: 範囲選択で「ここまで」を決めたとき、BacklogItem の `isPlanned` と
+  `rank` で表現する（ランクで並べ、上位N件を計画済みとする等）。日数設定がある場合は「何日分」を
+  保持するフィールドを BacklogStorage に持つか検討。
+
+### 5.5〜5.7 UI・フロー
+
+- **自動ルールの1種類**: Phase5 で実装する1種類を「アイドル順」か「レアリティ順」のどちらにするか
+  選択。設定UIの配置はスコープ外でもよい。
+- **スプリント開始の入口**: SprintSettings のみで開始するか、カンバン画面からも
+  「バックログで選んだ範囲でスプリント開始」を実行できるようにするか。
+- **読了との同期**: カンバンでストーリーを「既読」列に移動したら
+  `useReadStatus.setRead(storyId, true)` を呼ぶ。逆に既読にしたストーリーが
+  バックログ/カンバンに残る表示にするか、未読のみ表示とするかは仕様どおり
+  「未読ストーリー」を前提にすればよい。
+
+### 参照する既存コード
+
+- ストレージ: `src/composables/useLocalStorage.ts`（get/set はキー単位）、
+  `src/composables/useReadStatus.ts`（キー `readStatus`）
+- フィルター・ストーリー一覧: `src/composables/useStories.ts`
+  （`StoryFilter`, `filteredStories`, `setFilter`）
+- 読了状態: `src/composables/useReadStatus.ts`（`isRead`, `setRead`, `toggleRead`）
+- 型: `src/types/domain/`（Story, useStories の StoryFilter は
+  composables 側で定義）
+
 ## 実装の注意点
 
 1. **段階的な実装**: 各フェーズで動作確認とコミットを行う
 2. **テスト駆動開発**: Composablesは必ずテストを書く
 3. **型安全性**: TypeScriptの型を活用して型安全性を確保
-4. **既存コードとの統合**: 既存の`useStories`、`useReadStatus`などと連携
-5. **パフォーマンス**: 大量のストーリーに対応できるよう、必要に応じて仮想スクロールを検討
-6. **モック・ワイヤーフレーム**: 別途作成せず、既存の Phase5 UI 引き継ぎ書を参照して実装する
+4. **既存コードとの統合**: 既存の`useStories`、`useReadStatus`などと連携。カンバンで「既読」列に
+   移動したストーリーは `useReadStatus.setRead(storyId, true)` で読了状態と同期する
+5. **パフォーマンス**: 大量のストーリーに対応できるよう、
+   必要に応じて仮想スクロールを検討
+6. **モック・ワイヤーフレーム**: 別途作成せず、既存の Phase5 UI 引き継ぎ書を参照して
+   実装する
 
 ## 次のステップ
 
-Phase 5.1から順番に実装を開始する。各フェーズで動作確認とコミットを行い、段階的に機能を追加していく。
+Phase 5.1から順番に実装を開始する。各フェーズで動作確認とコミットを行い、段階的に
+機能を追加していく。**別チャットで実装する場合は、上記「実装時確認する点」で方針を
+決めてから着手すること。**
 
 ## 関連ドキュメント
 
-- [Phase5 画面レイアウトの概要](phase5-ui-summary.md) - 概要 および 初期段階の計画から引き継いだ資料
+- [Phase5 画面レイアウトの概要](phase5-ui-summary.md) - 概要 および
+  初期段階の計画から引き継いだ資料
 - [Phase5 疑問点と修正要望](phase5-questions-and-issues.md) - 計画書に対する疑問点と修正要望
