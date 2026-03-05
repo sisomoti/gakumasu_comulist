@@ -8,16 +8,24 @@ import type { Rarity } from './card'
 export type BacklogRank = number
 
 /**
+ * バックログ上の区分（アジャイルの Product Backlog / Sprint Backlog に相当）
+ * - sprintBacklog: スプリントバックログの候補（直近で読みたいもの）
+ * - productBacklog: プロダクトバックログ（近い内に読みたいもの、Rank 順）
+ * - outOfScope: プロダクトバックログの範囲外（計画外、順不同）
+ */
+export type BacklogSection = 'sprintBacklog' | 'productBacklog' | 'outOfScope'
+
+/**
  * バックログアイテム
- * 管理単位は拡張可能。Phase5 ではストーリーのみ利用（storyId で参照）
+ * 管理単位は拡張可能。現時点ではストーリーと1対1で紐づける（storyId で参照）
  */
 export interface BacklogItem {
   /** ストーリーID */
   storyId: string
-  /** ランク（小さいほど優先度が高い） */
+  /** ランク（小さいほど優先度が高い）。sprintBacklog・productBacklog では Rank 順で表示。outOfScope は順不同。 */
   rank: number
-  /** 計画済みかどうか（false の場合は未計画セクションに表示） */
-  isPlanned: boolean
+  /** どの区分に属するか（スプリントバックログの候補 / プロダクトバックログ / 範囲外） */
+  section: BacklogSection
 }
 
 /**
