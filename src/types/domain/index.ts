@@ -8,7 +8,7 @@ export type { Idol } from './idol'
 export type { Rarity, IdolCard, ProduceCard, SupportCard } from './card'
 export type { Story, ProduceCardStory, SupportCardStory } from './story'
 export type { SprintPeriod, Sprint, KanbanBucket, KanbanItem } from './sprint'
-export type { BacklogRank, BacklogItem, BacklogFilter } from './backlog'
+export type { BacklogRank, BacklogSection, BacklogItem, BacklogFilter } from './backlog'
 export type {
   ExternalGameData,
   IdolsData,
