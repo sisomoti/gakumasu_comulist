@@ -15,10 +15,13 @@ describe('App.vue', () => {
     expect(h1.text()).toBe('学マス 未読コミュ管理')
   })
 
-  it('Hello Worldメッセージが表示される', () => {
+  it('読み込みメッセージ・エラー・またはバックログ画面のいずれかが表示される', async () => {
     const wrapper = mount(App)
-    const p = wrapper.find('p')
-    expect(p.exists()).toBe(true)
-    expect(p.text()).toBe('Hello World from Vue 3 + TypeScript + Vite!')
+    await wrapper.vm.$nextTick()
+    const p = wrapper.findAll('p')
+    const backlogView = wrapper.findComponent({ name: 'BacklogView' })
+    const hasLoadingOrError =
+      p.length > 0 && (p[0].text().includes('読み込み中') || p[0].text().includes('読み込みに失敗'))
+    expect(hasLoadingOrError || backlogView.exists()).toBe(true)
   })
 })

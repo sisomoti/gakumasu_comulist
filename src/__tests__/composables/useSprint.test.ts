@@ -221,7 +221,6 @@ describe('useSprint', () => {
     it('すべて既存と重複する場合は保存しない（変更なし）', () => {
       const sprint = createSprint({ storyIds: ['story-1', 'story-2'] })
       vi.mocked(mockStorageService.get).mockReturnValue(storedSprint(sprint))
-      const setCallsBefore = vi.mocked(mockStorageService.set).mock.calls.length
       const { addStoriesToSprint, activeSprint } = useSprint(mockStorageService)
 
       addStoriesToSprint(['story-1', 'story-2'])

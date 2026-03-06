@@ -33,4 +33,5 @@ export {
   getCardIdFromStory,
   getMainIdolIdFromStory,
   getAppearingIdolIdsFromStory,
+  getCardFromStory,
 } from '../../utils/domain/storyUtils'
