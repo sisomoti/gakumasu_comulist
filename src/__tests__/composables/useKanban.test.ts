@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useKanban } from '../../composables/useKanban'
 import type { IStorageService } from '../../services/interfaces/IStorageService'
 import { READING_PLAN_STORAGE_KEYS } from '../../types/storage'
-import type { KanbanItem, KanbanBucket } from '../../types/domain/sprint'
-import type { KanbanStorage, KanbanColumnVisibility } from '../../types/storage'
+import type { KanbanItem } from '../../types/domain/sprint'
+import type { KanbanColumnVisibility } from '../../types/storage'
 import type { BacklogItem } from '../../types/domain/backlog'
 
 const STORAGE_KEY = READING_PLAN_STORAGE_KEYS.kanban

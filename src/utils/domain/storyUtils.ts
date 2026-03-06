@@ -1,4 +1,4 @@
-import type { Story, ExternalGameData } from '../../types/domain'
+import type { Story, ExternalGameData, ProduceCard, SupportCard } from '../../types/domain'
 import { isProduceCardStory, isSupportCardStory } from '../../types/domain'
 
 /**
@@ -81,4 +81,26 @@ export function getAppearingIdolIdsFromStory(story: Story, gameData: ExternalGam
     return [card.mainIdolId, ...card.appearingIdolIds]
   }
   return []
+}
+
+/**
+ * Storyからカード情報（ProduceCard | SupportCard）を取得する
+ *
+ * バックログ等のUIでカード名・レアリティを表示するために使用する。
+ *
+ * @param story ストーリーオブジェクト
+ * @param gameData 外部ゲームデータ
+ * @returns カード情報、見つからない場合はundefined
+ */
+export function getCardFromStory(
+  story: Story,
+  gameData: ExternalGameData
+): ProduceCard | SupportCard | undefined {
+  if (isProduceCardStory(story)) {
+    return gameData.produceCards.find(card => card.id === story.produceCardId)
+  }
+  if (isSupportCardStory(story)) {
+    return gameData.supportCards.find(card => card.id === story.supportCardId)
+  }
+  return undefined
 }
