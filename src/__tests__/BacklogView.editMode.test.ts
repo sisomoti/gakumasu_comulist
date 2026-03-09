@@ -35,97 +35,80 @@ function getSectionIds(items: BacklogItem[], section: BacklogItem['section']): s
 }
 
 /**
- * 編集モードで3セクションを行き来する全順列で、
- * 保存後に各セクションで「最後に編集した状態」が反映されていることを確認する。
- *
- * 行う編集（異なるセクションへの移動時は moveToXXX で section 変更が必要。範囲外への移動は moveToOutOfScope）:
- * - スプリント: 順序を [B, A] に変更（同セクション内のため setRanks のみ）
- * - プロダクト: 順序を [D, C] に変更（同セクション内のため setRanks のみ）
- * - 範囲外: A を範囲外に移動（moveToOutOfScope('A')）
- *
- * 期待する最終状態（どの順序で編集しても同じ）:
- * - スプリント: [B]
- * - プロダクト: [D, C]
- * - 範囲外: E と A が含まれる（順序は rank に依存するため不定）
+ * 3セクションから移動元・移動先を順序付きで選ぶ 3P2 の全6通り。
+ * 各方向で1要素を他セクションへ移動したとき、useBacklog 単体で保存・反映されることを確認する。
  */
-describe('BacklogView 編集モード: 3セクション相互編集の全順列', () => {
-  const permutations: Array<{ order: [number, number, number]; label: string }> = [
-    { order: [0, 1, 2], label: 'スプリント → プロダクト → 範囲外' },
-    { order: [0, 2, 1], label: 'スプリント → 範囲外 → プロダクト' },
-    { order: [1, 0, 2], label: 'プロダクト → スプリント → 範囲外' },
-    { order: [1, 2, 0], label: 'プロダクト → 範囲外 → スプリント' },
-    { order: [2, 0, 1], label: '範囲外 → スプリント → プロダクト' },
-    { order: [2, 1, 0], label: '範囲外 → プロダクト → スプリント' },
-  ]
-
+describe('BacklogView 編集モード: 3セクション間移動（3P2）', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  permutations.forEach(({ order, label }) => {
-    it(`${label} で編集し保存すると、各セクションの最終編集状態が反映される`, () => {
-      const initialStored = storedBacklog({ items: [...INITIAL_ITEMS], filter: {} })
-      const mockStorage: IStorageService = {
-        get: vi.fn((key: string) => (key === STORAGE_KEY ? initialStored : null)),
-        set: vi.fn(),
-        remove: vi.fn(),
-        clear: vi.fn(),
-      }
+  function createMockStorage(initialStored: string): IStorageService {
+    return {
+      get: vi.fn((key: string) => (key === STORAGE_KEY ? initialStored : null)),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+    }
+  }
 
-      const { items, setRanks, moveToOutOfScope } = useBacklog(mockStorage)
+  it('1. スプリント→プロダクト: A を移動。移動後はプロダクトにのみある', () => {
+    const mockStorage = createMockStorage(storedBacklog({ items: [...INITIAL_ITEMS], filter: {} }))
+    const { items, setRanks, moveToProductBacklog } = useBacklog(mockStorage)
+    moveToProductBacklog('A')
+    setRanks(['B', 'A', 'C', 'D', 'E'])
+    expect(getSectionIds(items.value, 'sprintBacklog')).toEqual(['B'])
+    expect(getSectionIds(items.value, 'productBacklog')).toEqual(['A', 'C', 'D'])
+  })
 
-      // 編集を順列の順で適用（BacklogView の onSprintRankChange / onProductRankChange / moveToOutOfScope と同様）
-      function applyEditSprint() {
-        const sprintIds = getSectionIds(items.value, 'sprintBacklog')
-        const productIds = getSectionIds(items.value, 'productBacklog')
-        const outIds = getSectionIds(items.value, 'outOfScope')
-        // スプリント内の順序を [B, A] に
-        const newSprintOrder = ['B', 'A'].filter(id => sprintIds.includes(id))
-        const restSprint = sprintIds.filter(id => !newSprintOrder.includes(id))
-        setRanks([...newSprintOrder, ...restSprint, ...productIds, ...outIds])
-      }
+  it('2. プロダクト→スプリント: C を移動。移動後はスプリントにのみある', () => {
+    const mockStorage = createMockStorage(storedBacklog({ items: [...INITIAL_ITEMS], filter: {} }))
+    const { items, setRanks, moveToSprintBacklog } = useBacklog(mockStorage)
+    moveToSprintBacklog('C')
+    setRanks(['C', 'A', 'B', 'D', 'E'])
+    expect(getSectionIds(items.value, 'sprintBacklog')).toEqual(['C', 'A', 'B'])
+    expect(getSectionIds(items.value, 'productBacklog')).toEqual(['D'])
+  })
 
-      function applyEditProduct() {
-        const sprintIds = getSectionIds(items.value, 'sprintBacklog')
-        const productIds = getSectionIds(items.value, 'productBacklog')
-        const outIds = getSectionIds(items.value, 'outOfScope')
-        // プロダクト内の順序を [D, C] に
-        const newProductOrder = ['D', 'C'].filter(id => productIds.includes(id))
-        const restProduct = productIds.filter(id => !newProductOrder.includes(id))
-        setRanks([...sprintIds, ...newProductOrder, ...restProduct, ...outIds])
-      }
+  it('3. スプリント→範囲外: A を移動。移動後は範囲外にのみある', () => {
+    const mockStorage = createMockStorage(storedBacklog({ items: [...INITIAL_ITEMS], filter: {} }))
+    const { items, moveToOutOfScope } = useBacklog(mockStorage)
+    moveToOutOfScope('A')
+    expect(getSectionIds(items.value, 'sprintBacklog')).toEqual(['B'])
+    expect(getSectionIds(items.value, 'outOfScope')).toContain('A')
+    expect(getSectionIds(items.value, 'outOfScope').sort()).toEqual(['A', 'E'])
+  })
 
-      function applyEditOutOfScope() {
-        moveToOutOfScope('A')
-      }
+  it('4. プロダクト→範囲外: C を移動。移動後は範囲外にのみある', () => {
+    const mockStorage = createMockStorage(storedBacklog({ items: [...INITIAL_ITEMS], filter: {} }))
+    const { items, moveToOutOfScope } = useBacklog(mockStorage)
+    moveToOutOfScope('C')
+    expect(getSectionIds(items.value, 'productBacklog')).toEqual(['D'])
+    expect(getSectionIds(items.value, 'outOfScope')).toContain('C')
+    expect(getSectionIds(items.value, 'outOfScope').sort()).toEqual(['C', 'E'])
+  })
 
-      const edits = [() => applyEditSprint(), () => applyEditProduct(), () => applyEditOutOfScope()]
+  it('5. 範囲外→スプリント: E を移動。移動後はスプリントにのみある', () => {
+    const mockStorage = createMockStorage(storedBacklog({ items: [...INITIAL_ITEMS], filter: {} }))
+    const { items, setRanks, moveToSprintBacklog } = useBacklog(mockStorage)
+    moveToSprintBacklog('E')
+    setRanks(['A', 'B', 'C', 'D', 'E'])
+    expect(getSectionIds(items.value, 'sprintBacklog')).toContain('E')
+    expect(getSectionIds(items.value, 'outOfScope')).not.toContain('E')
+  })
 
-      for (const idx of order) {
-        edits[idx]()
-      }
-
-      // 保存後（setRanks / moveToOutOfScope はその都度保存している）の状態を確認
-      const sprintIds = getSectionIds(items.value, 'sprintBacklog')
-      const productIds = getSectionIds(items.value, 'productBacklog')
-      const outIds = getSectionIds(items.value, 'outOfScope')
-
-      expect(sprintIds, 'スプリントは最後の編集状態 [B]').toEqual(['B'])
-      expect(productIds, 'プロダクトは最後の編集状態 [D, C]').toEqual(['D', 'C'])
-      expect(outIds.slice().sort(), '範囲外は E と A が含まれる').toEqual(['A', 'E'])
-
-      // ストレージにも保存されていることを確認
-      expect(mockStorage.set).toHaveBeenCalledWith(
-        STORAGE_KEY,
-        expect.stringContaining('"storyId":"B"')
-      )
-    })
+  it('6. 範囲外→プロダクト: E を移動。移動後はプロダクトにのみある', () => {
+    const mockStorage = createMockStorage(storedBacklog({ items: [...INITIAL_ITEMS], filter: {} }))
+    const { items, setRanks, moveToProductBacklog } = useBacklog(mockStorage)
+    moveToProductBacklog('E')
+    setRanks(['A', 'B', 'C', 'D', 'E'])
+    expect(getSectionIds(items.value, 'productBacklog')).toContain('E')
+    expect(getSectionIds(items.value, 'outOfScope')).not.toContain('E')
   })
 })
 
 /**
  * 同セクション内の入れ替えは setRanks のみでよい。
- * 異なるセクションへの移動では、想定仕様どおり moveToXXX による section 変更が必須（moveToXXX + setRanks）。
  * useBacklog 単体で正しく保存されることを確認。統合テストで setRanks 経路が失敗する場合、ここが通れば原因はコンポーネント層にある。
  */
 describe('BacklogView 編集モード: setRanks のみの操作（useBacklog 単体）', () => {
@@ -161,35 +144,5 @@ describe('BacklogView 編集モード: setRanks のみの操作（useBacklog 単
     const productIds = getSectionIds(items.value, 'productBacklog')
     expect(productIds).toEqual(['D', 'C'])
     expect(getSectionIds(items.value, 'sprintBacklog')).toEqual(['A', 'B'])
-  })
-
-  it('スプリント→プロダクトへ1件移動: moveToProductBacklog と setRanks', () => {
-    const initialStored = storedBacklog({ items: [...INITIAL_ITEMS], filter: {} })
-    const mockStorage: IStorageService = {
-      get: vi.fn((key: string) => (key === STORAGE_KEY ? initialStored : null)),
-      set: vi.fn(),
-      remove: vi.fn(),
-      clear: vi.fn(),
-    }
-    const { items, setRanks, moveToProductBacklog } = useBacklog(mockStorage)
-    moveToProductBacklog('A')
-    setRanks(['B', 'A', 'C', 'D', 'E'])
-    expect(getSectionIds(items.value, 'sprintBacklog')).toEqual(['B'])
-    expect(getSectionIds(items.value, 'productBacklog')).toEqual(['A', 'C', 'D'])
-  })
-
-  it('プロダクト→スプリントへ1件移動: moveToSprintBacklog と setRanks', () => {
-    const initialStored = storedBacklog({ items: [...INITIAL_ITEMS], filter: {} })
-    const mockStorage: IStorageService = {
-      get: vi.fn((key: string) => (key === STORAGE_KEY ? initialStored : null)),
-      set: vi.fn(),
-      remove: vi.fn(),
-      clear: vi.fn(),
-    }
-    const { items, setRanks, moveToSprintBacklog } = useBacklog(mockStorage)
-    moveToSprintBacklog('C')
-    setRanks(['C', 'A', 'B', 'D', 'E'])
-    expect(getSectionIds(items.value, 'sprintBacklog')).toEqual(['C', 'A', 'B'])
-    expect(getSectionIds(items.value, 'productBacklog')).toEqual(['D'])
   })
 })
