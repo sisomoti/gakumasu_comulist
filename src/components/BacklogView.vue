@@ -238,6 +238,9 @@ defineExpose({
   onProductRankChange,
   moveToOutOfScope: backlog.moveToOutOfScope,
   getBacklogItems: () => backlog.items.value,
+  getDisplayedSprintItems: () => [...sprintBacklogItems.value],
+  getDisplayedProductItems: () => [...productBacklogItems.value],
+  getDisplayedOutOfScopeItems: () => [...outOfScopeItems.value],
 })
 </script>
 
