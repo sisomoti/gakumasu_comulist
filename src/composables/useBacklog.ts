@@ -29,6 +29,19 @@ export function useBacklog(storageService: IStorageService = new LocalStorageSer
   const items = ref<BacklogItem[]>([])
   const filter = ref<BacklogFilter>({})
 
+  /** 同一 storyId の二重追加・並行更新を防ぐ（useBacklog インスタンス内に閉じる） */
+  const processingStoryIds = new Set<string>()
+
+  function withSectionLock(storyId: string, fn: () => void): void {
+    if (processingStoryIds.has(storyId)) return
+    processingStoryIds.add(storyId)
+    try {
+      fn()
+    } finally {
+      processingStoryIds.delete(storyId)
+    }
+  }
+
   function saveBacklog(): void {
     const data: BacklogStorage = {
       items: items.value,
@@ -103,24 +116,36 @@ export function useBacklog(storageService: IStorageService = new LocalStorageSer
    * 指定ストーリーをプロダクトバックログの範囲外（計画外）に移す。「計画から外す」操作。
    */
   function moveToOutOfScope(storyId: string): void {
-    const idx = items.value.findIndex(i => i.storyId === storyId)
-    if (idx < 0) return
-    items.value = items.value.map((item, i) =>
-      i === idx ? { ...item, section: 'outOfScope' as const } : item
-    )
-    saveBacklog()
+    withSectionLock(storyId, () => {
+      const idx = items.value.findIndex(i => i.storyId === storyId)
+      if (idx < 0) return
+      items.value = items.value.map((item, i) =>
+        i === idx ? { ...item, section: 'outOfScope' as const } : item
+      )
+      saveBacklog()
+    })
   }
 
   /**
    * 指定ストーリーをプロダクトバックログに移す。
+   * items に存在しない場合は BacklogItem を追加し、rank を末尾に付与する（moveToSprintBacklog と対称）。
    */
   function moveToProductBacklog(storyId: string): void {
-    const idx = items.value.findIndex(i => i.storyId === storyId)
-    if (idx < 0) return
-    items.value = items.value.map((item, i) =>
-      i === idx ? { ...item, section: 'productBacklog' as const } : item
-    )
-    saveBacklog()
+    withSectionLock(storyId, () => {
+      const idx = items.value.findIndex(i => i.storyId === storyId)
+      if (idx >= 0) {
+        items.value = items.value.map((item, i) =>
+          i === idx ? { ...item, section: 'productBacklog' as const } : item
+        )
+      } else {
+        const maxRank = items.value.length === 0 ? 0 : Math.max(...items.value.map(i => i.rank)) + 1
+        items.value = [
+          ...items.value,
+          { storyId, rank: maxRank, section: 'productBacklog' as const },
+        ]
+      }
+      saveBacklog()
+    })
   }
 
   /**
@@ -128,16 +153,21 @@ export function useBacklog(storageService: IStorageService = new LocalStorageSer
    * items に存在しない場合は BacklogItem を追加し、rank を末尾に付与する。
    */
   function moveToSprintBacklog(storyId: string): void {
-    const idx = items.value.findIndex(i => i.storyId === storyId)
-    if (idx >= 0) {
-      items.value = items.value.map((item, i) =>
-        i === idx ? { ...item, section: 'sprintBacklog' as const } : item
-      )
-    } else {
-      const maxRank = items.value.length === 0 ? 0 : Math.max(...items.value.map(i => i.rank)) + 1
-      items.value = [...items.value, { storyId, rank: maxRank, section: 'sprintBacklog' as const }]
-    }
-    saveBacklog()
+    withSectionLock(storyId, () => {
+      const idx = items.value.findIndex(i => i.storyId === storyId)
+      if (idx >= 0) {
+        items.value = items.value.map((item, i) =>
+          i === idx ? { ...item, section: 'sprintBacklog' as const } : item
+        )
+      } else {
+        const maxRank = items.value.length === 0 ? 0 : Math.max(...items.value.map(i => i.rank)) + 1
+        items.value = [
+          ...items.value,
+          { storyId, rank: maxRank, section: 'sprintBacklog' as const },
+        ]
+      }
+      saveBacklog()
+    })
   }
 
   loadBacklog()
