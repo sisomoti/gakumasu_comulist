@@ -161,10 +161,13 @@ const productBacklogItems = computed(() => {
 })
 
 const outOfScopeItems = computed(() => {
+  /** バックログで計画済み → 計画外になったもの */
   const fromBacklog = backlog.items.value
     .filter(i => i.section === 'outOfScope' && displayCandidateSet.value.has(i.storyId))
     .sort((a, b) => a.rank - b.rank)
-  const backlogStoryIds = new Set(backlog.items.value.map(i => i.storyId))
+
+  /** 未計画のストーリーの一覧 */
+  const backlogStoryIds = new Set(fromBacklog.map(i => i.storyId))
   const maxRank =
     backlog.items.value.length > 0 ? Math.max(...backlog.items.value.map(i => i.rank)) : 0
   const virtual: BacklogItemType[] = []
@@ -178,12 +181,22 @@ const outOfScopeItems = computed(() => {
 })
 
 function onSprintRankChange(ordered: string[]) {
+  const currentSprintIds = new Set(sprintBacklogItems.value.map(i => i.storyId))
+  for (const id of ordered) {
+    if (currentSprintIds.has(id)) continue
+    backlog.moveToSprintBacklog(id)
+  }
   const productIds = productBacklogItems.value.map(i => i.storyId)
   const outIds = outOfScopeItems.value.map(i => i.storyId)
   backlog.setRanks([...ordered, ...productIds, ...outIds])
 }
 
 function onProductRankChange(ordered: string[]) {
+  const currentProductIds = new Set(productBacklogItems.value.map(i => i.storyId))
+  for (const id of ordered) {
+    if (currentProductIds.has(id)) continue
+    backlog.moveToProductBacklog(id)
+  }
   const sprintIds = sprintBacklogItems.value.map(i => i.storyId)
   const outIds = outOfScopeItems.value.map(i => i.storyId)
   backlog.setRanks([...sprintIds, ...ordered, ...outIds])
