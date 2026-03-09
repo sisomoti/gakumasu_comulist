@@ -62,6 +62,8 @@ import BacklogSprintCandidateSection from './BacklogSprintCandidateSection.vue'
 import BacklogProductSection from './BacklogProductSection.vue'
 import BacklogOutOfScopeSection from './BacklogOutOfScopeSection.vue'
 import type { IStoryRepository } from '../services/interfaces/IStoryRepository'
+import type { IStorageService } from '../services/interfaces/IStorageService'
+import { LocalStorageService } from '../services/storage/LocalStorageService'
 import type { ExternalGameData } from '../types/domain'
 import type { Story } from '../types/domain'
 import type { BacklogItem as BacklogItemType } from '../types/domain/backlog'
@@ -97,7 +99,8 @@ const readStatus = readStatusRef.value
 const cardOwnership = cardOwnershipRef.value
 
 const stories = useStories(repository, gameData, readStatus, cardOwnership)
-const backlog = useBacklog()
+const backlogStorage = inject<IStorageService | null>('backlogStorage', null)
+const backlog = useBacklog(backlogStorage ?? new LocalStorageService())
 const sprint = useSprint()
 
 onMounted(() => {
@@ -229,6 +232,13 @@ function confirmUpToRank() {
   selectedStoryIds.value = new Set()
   anchorStoryId.value = null
 }
+
+defineExpose({
+  onSprintRankChange,
+  onProductRankChange,
+  moveToOutOfScope: backlog.moveToOutOfScope,
+  getBacklogItems: () => backlog.items.value,
+})
 </script>
 
 <style scoped>
