@@ -1,10 +1,11 @@
 <template>
   <div
     class="backlog-item"
-    :class="{ 'is-edit-mode': isEditMode }"
+    :class="{ 'is-edit-mode': isEditMode, 'is-selected': selected }"
     :data-story-id="backlogItem.storyId"
+    @click="onClick"
   >
-    <span v-if="isEditMode" class="drag-handle" aria-hidden="true">⋮⋮</span>
+    <span v-if="isEditMode" class="drag-handle" aria-hidden="true" @click.stop>⋮⋮</span>
     <span class="item-name">{{ displayName }}</span>
     <span class="item-meta">{{ displayMeta }}</span>
   </div>
@@ -23,9 +24,19 @@ const props = withDefaults(
     backlogItem: BacklogItemType
     isEditMode: boolean
     gameData?: ExternalGameData
+    /** 範囲選択で「ここまで」に含まれるか */
+    selected?: boolean
   }>(),
-  { gameData: undefined }
+  { gameData: undefined, selected: false }
 )
+
+const emit = defineEmits<{
+  select: [ev: MouseEvent]
+}>()
+
+function onClick(ev: MouseEvent) {
+  if (props.isEditMode) emit('select', ev)
+}
 
 const displayName = computed(() => {
   if (!props.gameData) return props.story.id
@@ -63,6 +74,11 @@ const displayMeta = computed(() => {
 
 .backlog-item.is-edit-mode:active {
   cursor: grabbing;
+}
+
+.backlog-item.is-selected {
+  background: #e0f2fe;
+  border-color: #0ea5e9;
 }
 
 .drag-handle {

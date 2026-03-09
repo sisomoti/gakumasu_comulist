@@ -9,6 +9,7 @@
         tag="div"
         class="draggable-list"
         :group="{ name: 'backlog', pull: true, put: true }"
+        handle=".drag-handle"
         @end="onDragEnd"
       >
         <template #item="{ element }">
@@ -17,6 +18,8 @@
             :backlog-item="element"
             :is-edit-mode="true"
             :game-data="gameData"
+            :selected="selectedStoryIds.has(element.storyId)"
+            @select="ev => emit('select-item', element.storyId, ev.shiftKey)"
           />
         </template>
       </draggable>
@@ -42,12 +45,20 @@ import type { Story } from '../types/domain'
 import type { BacklogItem as BacklogItemType } from '../types/domain/backlog'
 import type { ExternalGameData } from '../types/domain'
 
-const props = defineProps<{
-  items: BacklogItemType[]
-  storiesMap: Map<string, Story>
-  gameData: ExternalGameData
-  isEditMode: boolean
-  onRankChange?: (orderedStoryIds: string[]) => void
+const props = withDefaults(
+  defineProps<{
+    items: BacklogItemType[]
+    storiesMap: Map<string, Story>
+    gameData: ExternalGameData
+    isEditMode: boolean
+    onRankChange?: (orderedStoryIds: string[]) => void
+    selectedStoryIds?: Set<string>
+  }>(),
+  { selectedStoryIds: () => new Set() }
+)
+
+const emit = defineEmits<{
+  'select-item': [storyId: string, shiftKey: boolean]
 }>()
 
 const localList = ref<BacklogItemType[]>([])

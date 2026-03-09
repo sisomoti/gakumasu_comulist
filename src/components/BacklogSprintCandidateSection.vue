@@ -1,6 +1,7 @@
 <template>
   <section class="backlog-section backlog-sprint-candidate">
     <h3 class="section-title">スプリントバックログの候補</h3>
+    <p v-if="summaryText" class="section-summary">{{ summaryText }}</p>
     <div class="section-list">
       <draggable
         v-if="isEditMode"
@@ -9,6 +10,7 @@
         tag="div"
         class="draggable-list"
         :group="{ name: 'backlog', pull: true, put: true }"
+        handle=".drag-handle"
         @end="onDragEnd"
       >
         <template #item="{ element }">
@@ -17,6 +19,8 @@
             :backlog-item="element"
             :is-edit-mode="true"
             :game-data="gameData"
+            :selected="selectedStoryIds.has(element.storyId)"
+            @select="ev => emit('select-item', element.storyId, ev.shiftKey)"
           />
         </template>
       </draggable>
@@ -31,6 +35,9 @@
         />
       </template>
     </div>
+    <div class="backlog-divider" aria-hidden="true">
+      <span class="divider-label">ここまで（スプリント候補）</span>
+    </div>
   </section>
 </template>
 
@@ -42,12 +49,23 @@ import type { Story } from '../types/domain'
 import type { BacklogItem as BacklogItemType } from '../types/domain/backlog'
 import type { ExternalGameData } from '../types/domain'
 
-const props = defineProps<{
-  items: BacklogItemType[]
-  storiesMap: Map<string, Story>
-  gameData: ExternalGameData
-  isEditMode: boolean
-  onRankChange?: (orderedStoryIds: string[]) => void
+const props = withDefaults(
+  defineProps<{
+    items: BacklogItemType[]
+    storiesMap: Map<string, Story>
+    gameData: ExternalGameData
+    isEditMode: boolean
+    onRankChange?: (orderedStoryIds: string[]) => void
+    /** 目安表示（例: "現在 3件" または "現在 3件 (読む期間7日間)"） */
+    summaryText?: string
+    /** 範囲選択で「ここまで」に含まれる storyId の集合 */
+    selectedStoryIds?: Set<string>
+  }>(),
+  { summaryText: '', selectedStoryIds: () => new Set() }
+)
+
+const emit = defineEmits<{
+  'select-item': [storyId: string, shiftKey: boolean]
 }>()
 
 const localList = ref<BacklogItemType[]>([])
@@ -77,11 +95,29 @@ function onDragEnd() {
   color: #333;
 }
 
+.section-summary {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 0.5rem 0;
+}
+
 .section-list {
   min-height: 2rem;
 }
 
 .draggable-list {
   min-height: 2rem;
+}
+
+.backlog-divider {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 2px dashed #94a3b8;
+  color: #64748b;
+  font-size: 0.8125rem;
+}
+
+.divider-label {
+  font-weight: 500;
 }
 </style>
