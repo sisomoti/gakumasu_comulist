@@ -4,7 +4,20 @@
       <button v-if="!isEditMode" type="button" class="btn-edit" @click="isEditMode = true">
         順序を編集
       </button>
-      <button v-else type="button" class="btn-done" @click="isEditMode = false">完了</button>
+      <template v-else>
+        <button type="button" class="btn-done" @click="isEditMode = false">完了</button>
+        <button type="button" class="btn-apply-order" @click="applyIdolOrder">
+          おすすめ順を適用
+        </button>
+        <button
+          v-if="selectedStoryIds.size > 0"
+          type="button"
+          class="btn-up-to"
+          @click="confirmUpToRank"
+        >
+          ここまでをスプリント候補にする
+        </button>
+      </template>
     </div>
 
     <BacklogFilterPanel :filter="backlog.filter.value" :set-filter="backlog.setFilter" />
@@ -14,7 +27,10 @@
       :stories-map="storiesMap"
       :game-data="gameData"
       :is-edit-mode="isEditMode"
+      :summary-text="sprintCandidateSummaryText"
+      :selected-story-ids="selectedStoryIds"
       :on-rank-change="onSprintRankChange"
+      @select-item="handleSelectItem"
     />
 
     <BacklogProductSection
@@ -22,7 +38,9 @@
       :stories-map="storiesMap"
       :game-data="gameData"
       :is-edit-mode="isEditMode"
+      :selected-story-ids="selectedStoryIds"
       :on-rank-change="onProductRankChange"
+      @select-item="handleSelectItem"
     />
 
     <BacklogOutOfScopeSection
@@ -47,6 +65,9 @@ import type { Story } from '../types/domain'
 import type { BacklogItem as BacklogItemType } from '../types/domain/backlog'
 import { useStories } from '../composables/useStories'
 import { useBacklog } from '../composables/useBacklog'
+import { useSprint } from '../composables/useSprint'
+import { sortByIdolOrder } from '../utils/backlogSort'
+import { getSprintDurationDays } from '../utils/sprintUtils'
 import type { useReadStatus } from '../composables/useReadStatus'
 import type { useCardOwnership } from '../composables/useCardOwnership'
 
@@ -75,6 +96,7 @@ const cardOwnership = cardOwnershipRef.value
 
 const stories = useStories(repository, gameData, readStatus, cardOwnership)
 const backlog = useBacklog()
+const sprint = useSprint()
 
 onMounted(() => {
   stories.setFilter(backlog.filter.value)
@@ -89,6 +111,16 @@ watch(
 )
 
 const isEditMode = ref(false)
+
+/** 範囲選択で「ここまで」に含める storyId の集合（編集モードのみ使用） */
+const selectedStoryIds = ref<Set<string>>(new Set())
+/** 範囲拡張の基準となる storyId（Shift+クリックでここから範囲選択） */
+const anchorStoryId = ref<string | null>(null)
+
+const combinedSprintProductIds = computed(() => [
+  ...sprintBacklogItems.value.map(i => i.storyId),
+  ...productBacklogItems.value.map(i => i.storyId),
+])
 
 const displayCandidateSet = computed(() => {
   const ids = new Set(stories.filteredStories.value.map(s => s.id))
@@ -107,6 +139,14 @@ const sprintBacklogItems = computed(() => {
   return backlog.items.value
     .filter(i => i.section === 'sprintBacklog' && displayCandidateSet.value.has(i.storyId))
     .sort((a, b) => a.rank - b.rank)
+})
+
+/** スプリント候補の目安表示（現在 X件 / 現在 X件 (読む期間○日間)） */
+const sprintCandidateSummaryText = computed(() => {
+  const n = sprintBacklogItems.value.length
+  if (n === 0) return ''
+  const days = getSprintDurationDays(sprint.activeSprint.value)
+  return days != null ? `現在 ${n}件 (読む期間${days}日間)` : `現在 ${n}件`
 })
 
 const productBacklogItems = computed(() => {
@@ -143,6 +183,50 @@ function onProductRankChange(ordered: string[]) {
   const outIds = outOfScopeItems.value.map(i => i.storyId)
   backlog.setRanks([...sprintIds, ...ordered, ...outIds])
 }
+
+function applyIdolOrder() {
+  const sprintIds = sprintBacklogItems.value.map(i => i.storyId)
+  const productIds = productBacklogItems.value.map(i => i.storyId)
+  const outIds = outOfScopeItems.value.map(i => i.storyId)
+  const combined = [...sprintIds, ...productIds]
+  const ordered = sortByIdolOrder(combined, storiesMap.value, gameData)
+  backlog.setRanks([...ordered, ...outIds])
+}
+
+function handleSelectItem(storyId: string, shiftKey: boolean) {
+  const list = combinedSprintProductIds.value
+  if (!shiftKey) {
+    selectedStoryIds.value = new Set([storyId])
+    anchorStoryId.value = storyId
+    return
+  }
+  if (anchorStoryId.value == null) {
+    selectedStoryIds.value = new Set([storyId])
+    anchorStoryId.value = storyId
+    return
+  }
+  const a = list.indexOf(anchorStoryId.value)
+  const b = list.indexOf(storyId)
+  if (a === -1 || b === -1) {
+    selectedStoryIds.value = new Set([storyId])
+    anchorStoryId.value = storyId
+    return
+  }
+  const [lo, hi] = a <= b ? [a, b] : [b, a]
+  selectedStoryIds.value = new Set(list.slice(lo, hi + 1))
+}
+
+function confirmUpToRank() {
+  const rankMap = new Map(backlog.items.value.map(i => [i.storyId, i.rank]))
+  let maxRank = -1
+  for (const id of selectedStoryIds.value) {
+    const r = rankMap.get(id)
+    if (r !== undefined && maxRank < r) maxRank = r
+  }
+  if (maxRank >= 0) backlog.setInSprintBacklogUpToRank(maxRank)
+  selectedStoryIds.value = new Set()
+  anchorStoryId.value = null
+}
 </script>
 
 <style scoped>
@@ -171,5 +255,37 @@ function onProductRankChange(ordered: string[]) {
 .btn-done:hover {
   background: #35a372;
   border-color: #35a372;
+}
+
+.btn-apply-order {
+  margin-left: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9375rem;
+  border-radius: 6px;
+  border: 1px solid #64748b;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.btn-apply-order:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-up-to {
+  margin-left: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9375rem;
+  border-radius: 6px;
+  border: 1px solid #0ea5e9;
+  background: #0ea5e9;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-up-to:hover {
+  background: #0284c7;
+  border-color: #0284c7;
 }
 </style>
