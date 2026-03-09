@@ -15,12 +15,14 @@
           class="btn-up-to"
           @click="confirmUpToRank"
         >
-          ここまでをスプリント候補にする
+          ここまでを「直近で読みたい」にする
         </button>
       </template>
     </div>
 
     <BacklogFilterPanel :filter="backlog.filter.value" :set-filter="backlog.setFilter" />
+
+    <h3 class="backlog-list-title">読みたいコミュ一覧</h3>
 
     <BacklogSprintCandidateSection
       :items="sprintBacklogItems"
@@ -287,5 +289,37 @@ function confirmUpToRank() {
 .btn-up-to:hover {
   background: #0284c7;
   border-color: #0284c7;
+}
+
+/* 見出しの段階: h3（同列の大見出し）> h4 > 補助文 */
+.backlog-list-title,
+.backlog-view :deep(h3.section-title) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #334155;
+  color: #1e293b;
+}
+
+.backlog-list-title::before,
+.backlog-view :deep(h3.section-title)::before {
+  content: '◆ ';
+  color: #64748b;
+  font-weight: 400;
+}
+
+.backlog-view :deep(h4.section-title) {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #334155;
+}
+
+.backlog-view :deep(.section-summary),
+.backlog-view :deep(span.divider-label) {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #64748b;
 }
 </style>

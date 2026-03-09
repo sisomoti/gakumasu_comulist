@@ -1,6 +1,6 @@
 <template>
   <section class="backlog-section backlog-sprint-candidate">
-    <h3 class="section-title">スプリントバックログの候補</h3>
+    <h4 class="section-title">直近で読みたい</h4>
     <p v-if="summaryText" class="section-summary">{{ summaryText }}</p>
     <div class="section-list">
       <draggable
@@ -34,9 +34,6 @@
           :game-data="gameData"
         />
       </template>
-    </div>
-    <div class="backlog-divider" aria-hidden="true">
-      <span class="divider-label">ここまで（スプリント候補）</span>
     </div>
   </section>
 </template>
@@ -88,13 +85,6 @@ function onDragEnd() {
   margin-bottom: 1.5rem;
 }
 
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-  color: #333;
-}
-
 .section-summary {
   font-size: 0.875rem;
   color: #64748b;
@@ -107,17 +97,5 @@ function onDragEnd() {
 
 .draggable-list {
   min-height: 2rem;
-}
-
-.backlog-divider {
-  margin-top: 0.75rem;
-  padding: 0.5rem 0;
-  border-top: 2px dashed #94a3b8;
-  color: #64748b;
-  font-size: 0.8125rem;
-}
-
-.divider-label {
-  font-weight: 500;
 }
 </style>

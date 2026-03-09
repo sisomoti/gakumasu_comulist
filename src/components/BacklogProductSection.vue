@@ -1,6 +1,6 @@
 <template>
   <section class="backlog-section backlog-product">
-    <h3 class="section-title">プロダクトバックログ</h3>
+    <h4 class="section-title section-title-with-divider">そのうち読みたい</h4>
     <div class="section-list">
       <draggable
         v-if="isEditMode"
@@ -81,11 +81,10 @@ function onDragEnd() {
   margin-bottom: 1.5rem;
 }
 
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-  color: #333;
+.section-title-with-divider {
+  padding-top: 0.75rem;
+  border-top: 2px dashed #94a3b8;
+  margin-top: 0.25rem;
 }
 
 .section-list {
