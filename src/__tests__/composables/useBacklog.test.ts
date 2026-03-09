@@ -234,6 +234,18 @@ describe('useBacklog', () => {
 
       expect(items.value[0].section).toBe('productBacklog')
     })
+
+    it('items に存在しない場合は productBacklog で新規追加する（moveToSprintBacklog と対称）', () => {
+      vi.mocked(mockStorageService.get).mockReturnValue(null)
+      const { moveToProductBacklog, items } = useBacklog(mockStorageService)
+
+      moveToProductBacklog('new-story')
+
+      expect(items.value).toHaveLength(1)
+      expect(items.value[0].storyId).toBe('new-story')
+      expect(items.value[0].rank).toBe(0)
+      expect(items.value[0].section).toBe('productBacklog')
+    })
   })
 
   describe('moveToSprintBacklog', () => {
