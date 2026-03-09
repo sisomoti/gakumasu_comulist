@@ -1,6 +1,9 @@
 <template>
   <section class="backlog-section backlog-out-of-scope">
-    <h3 class="section-title">プロダクトバックログの範囲外（計画外）</h3>
+    <h3 class="section-title">未計画のコミュ一覧</h3>
+    <p class="section-desc">
+      上の「直近で読みたい」「そのうち読みたい」へドラッグ＆ドロップすると、読む予定に追加できます。
+    </p>
     <div class="section-list drop-zone" :class="{ 'drop-zone-active': isEditMode }">
       <draggable
         v-if="isEditMode"
@@ -31,7 +34,7 @@
         />
       </template>
       <p v-if="items.length === 0 && !isEditMode" class="empty-hint">
-        ここにドロップすると「計画から外す」
+        ここにドロップすると読む予定から外れます
       </p>
     </div>
   </section>
@@ -74,11 +77,11 @@ function onAdd(evt: { newIndex: number }) {
   margin-bottom: 1.5rem;
 }
 
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
+.section-desc {
+  font-size: 0.875rem;
+  color: #64748b;
   margin: 0 0 0.5rem 0;
-  color: #333;
+  line-height: 1.5;
 }
 
 .section-list {
