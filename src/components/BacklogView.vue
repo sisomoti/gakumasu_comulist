@@ -166,17 +166,22 @@ const outOfScopeItems = computed(() => {
     .filter(i => i.section === 'outOfScope' && displayCandidateSet.value.has(i.storyId))
     .sort((a, b) => a.rank - b.rank)
 
-  /** 未計画のストーリーの一覧 */
-  const backlogStoryIds = new Set(fromBacklog.map(i => i.storyId))
+  /** バックログに存在するストーリー */
+  const backlogStoryIds = new Set(backlog.items.value.map(i => i.storyId))
+
+  /** バックログに存在しないストーリー(最初から範囲外のストーリー) */
   const maxRank =
     backlog.items.value.length > 0 ? Math.max(...backlog.items.value.map(i => i.rank)) : 0
   const virtual: BacklogItemType[] = []
   let rank = maxRank + 1
+
   for (const s of stories.filteredStories.value) {
     if (!backlogStoryIds.has(s.id)) {
       virtual.push({ storyId: s.id, rank: rank++, section: 'outOfScope' })
     }
   }
+
+  // 範囲外の全一覧
   return [...fromBacklog, ...virtual]
 })
 
