@@ -11,6 +11,7 @@
         :group="{ name: 'backlog', pull: true, put: true }"
         handle=".drag-handle"
         @end="onDragEnd"
+        @add="onAdd"
       >
         <template #item="{ element }">
           <BacklogItem
@@ -71,7 +72,20 @@ watch(
   { immediate: true }
 )
 
+/**
+ * 同一ドラッグで @add と @end の両方が発火し、onRankChange が二重に呼ばれる場合がある。
+ * 親の useBacklog は moveToProductBacklog / setRanks でロック（withSectionLock）と冪等性を保っているため、
+ * 重複呼び出しでも状態の二重更新や不整合にはならない。
+ */
 function onDragEnd() {
+  props.onRankChange?.(localList.value.map(i => i.storyId))
+}
+
+/**
+ * 他リストからアイテムが追加されたときも onRankChange で保存する。
+ * 移動先リストでは @end が発火しない（または不安定）な場合がある（出典: https://github.com/SortableJS/Vue.Draggable/issues/999 ）。
+ */
+function onAdd() {
   props.onRankChange?.(localList.value.map(i => i.storyId))
 }
 </script>
