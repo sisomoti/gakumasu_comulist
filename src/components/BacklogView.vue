@@ -185,6 +185,11 @@ const outOfScopeItems = computed(() => {
   return [...fromBacklog, ...virtual]
 })
 
+/**
+ * スプリントセクションの並び変更時に呼ばれる。
+ * draggable の @add と @end の両方から呼ばれることがあり二重呼び出しになりうるが、
+ * useBacklog 側でロック（withSectionLock）と moveToSprintBacklog / setRanks の冪等性が保たれているため重複しない。
+ */
 function onSprintRankChange(ordered: string[]) {
   const currentSprintIds = new Set(sprintBacklogItems.value.map(i => i.storyId))
   for (const id of ordered) {
@@ -196,6 +201,11 @@ function onSprintRankChange(ordered: string[]) {
   backlog.setRanks([...ordered, ...productIds, ...outIds])
 }
 
+/**
+ * プロダクトセクションの並び変更時に呼ばれる。
+ * draggable の @add と @end の両方から呼ばれることがあり二重呼び出しになりうるが、
+ * useBacklog 側でロック（withSectionLock）と moveToProductBacklog / setRanks の冪等性が保たれているため重複しない。
+ */
 function onProductRankChange(ordered: string[]) {
   const currentProductIds = new Set(productBacklogItems.value.map(i => i.storyId))
   for (const id of ordered) {
