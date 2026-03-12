@@ -11,7 +11,7 @@ export type BacklogRank = number
  * バックログ上の区分（アジャイルの Product Backlog / Sprint Backlog に相当）
  * - sprintBacklog: スプリントバックログの候補（直近で読みたいもの）
  * - productBacklog: プロダクトバックログ（近い内に読みたいもの、Rank 順）
- * - outOfScope: プロダクトバックログの範囲外（計画外、順不同）
+ * - outOfScope: プロダクトバックログの範囲外（計画外。rank で表示順を保存）
  */
 export type BacklogSection = 'sprintBacklog' | 'productBacklog' | 'outOfScope'
 
@@ -22,7 +22,7 @@ export type BacklogSection = 'sprintBacklog' | 'productBacklog' | 'outOfScope'
 export interface BacklogItem {
   /** ストーリーID */
   storyId: string
-  /** ランク（小さいほど優先度が高い）。sprintBacklog・productBacklog では Rank 順で表示。outOfScope は順不同。 */
+  /** ランク（小さいほど優先度が高い）。全 section で rank 順に表示・保存する。 */
   rank: number
   /** どの区分に属するか（スプリントバックログの候補 / プロダクトバックログ / 範囲外） */
   section: BacklogSection
