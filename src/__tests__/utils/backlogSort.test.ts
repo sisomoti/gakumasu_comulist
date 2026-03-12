@@ -8,6 +8,8 @@ function produceStory(id: string, produceCardId: string, storyIndex = 1): Produc
 
 describe('backlogSort', () => {
   const gameData: ExternalGameData = {
+    version: '1.0.0',
+    lastUpdated: '2026-03-12T04:05:00Z',
     idols: [
       { id: 'idol-a', name: 'A' },
       { id: 'idol-b', name: 'B' },
@@ -18,6 +20,8 @@ describe('backlogSort', () => {
       { id: 'card-3', name: 'C3', rarity: 'SR', idolId: 'idol-a' },
     ],
     supportCards: [],
+    produceCardStories: [],
+    supportCardStories: [],
   }
 
   const story1 = produceStory('s1', 'card-1')
