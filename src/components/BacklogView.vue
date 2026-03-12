@@ -51,6 +51,7 @@
       :game-data="gameData"
       :is-edit-mode="isEditMode"
       :on-drop-to-out-of-scope="backlog.moveToOutOfScope"
+      :on-rank-change="onOutOfScopeRankChange"
     />
   </div>
 </template>
@@ -215,6 +216,15 @@ function onProductRankChange(ordered: string[]) {
   const sprintIds = sprintBacklogItems.value.map(i => i.storyId)
   const outIds = outOfScopeItems.value.map(i => i.storyId)
   backlog.setRanks([...sprintIds, ...ordered, ...outIds])
+}
+
+/**
+ * 範囲外セクション内の並び変更時に呼ばれる。順序を setRanks で保存する。
+ */
+function onOutOfScopeRankChange(ordered: string[]) {
+  const sprintIds = sprintBacklogItems.value.map(i => i.storyId)
+  const productIds = productBacklogItems.value.map(i => i.storyId)
+  backlog.setRanks([...sprintIds, ...productIds, ...ordered])
 }
 
 function applyIdolOrder() {

@@ -12,6 +12,7 @@
         tag="div"
         class="draggable-list"
         :group="{ name: 'backlog', pull: true, put: true }"
+        @end="onDragEnd"
         @add="onAdd"
       >
         <template #item="{ element }">
@@ -54,21 +55,37 @@ const props = defineProps<{
   gameData: ExternalGameData
   isEditMode: boolean
   onDropToOutOfScope?: (storyId: string) => void
+  /** 範囲外リスト内の順序変更時（並び替え・他セクションからのドロップ含む） */
+  onRankChange?: (orderedStoryIds: string[]) => void
 }>()
 
 const localList = ref<BacklogItemType[]>([])
 
+/** 範囲外は「追加・削除」時だけ props と同期する。同一メンバーの順序変更は localList を優先し @end で保存する。 */
+function hasSameItemSet(a: BacklogItemType[], b: BacklogItemType[]) {
+  if (a.length !== b.length) return false
+  const bIds = new Set(b.map(i => i.storyId))
+  return a.every(i => bIds.has(i.storyId))
+}
+
 watch(
   () => props.items,
   newItems => {
-    localList.value = [...newItems]
+    if (!hasSameItemSet(localList.value, newItems)) {
+      localList.value = [...newItems]
+    }
   },
   { immediate: true }
 )
 
+function onDragEnd() {
+  props.onRankChange?.(localList.value.map(i => i.storyId))
+}
+
 function onAdd(evt: { newIndex: number }) {
   const added = localList.value[evt.newIndex]
   if (added?.storyId) props.onDropToOutOfScope?.(added.storyId)
+  props.onRankChange?.(localList.value.map(i => i.storyId))
 }
 </script>
 
